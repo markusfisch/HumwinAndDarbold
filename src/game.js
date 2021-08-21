@@ -13,6 +13,8 @@ const atlasSize = 1024,
 	projMat = new Float32Array(16),
 	viewMat = new Float32Array(16),
 	modelViewMat = new Float32Array(16),
+	spriteMat = new Float32Array(16),
+	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16)
 
 let gl,
@@ -36,17 +38,35 @@ function drawSprite(sprite, modelMat) {
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 }
 
+let cameraRotation = 0
 function run() {
+	requestAnimationFrame(run)
+	lookAt(0, 0, cameraRotation)
+	cameraRotation += .01
+
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	translate(cacheMat, idMat, 0, 0, -10)
-	rotate(cacheMat, cacheMat, -.9, 1, 0, 0)
+
+	rotate(groundMat, idMat, -Math.PI / 2, 1, 0, 0)
+	for (let y = -2; y <= 2; ++y) {
+		for (let x = -2; x <= 2; ++x) {
+			translate(cacheMat, groundMat, x * 2, y * 2, 0)
+			drawSprite(1, cacheMat)
+		}
+	}
+
+	translate(cacheMat, spriteMat, Math.sin(cameraRotation), 0, 0)
 	drawSprite(0, cacheMat)
 }
 
-function lookAt(x, z) {
-	translate(viewMat, idMat, x + camPos[0], camPos[1], z + camPos[2])
+function lookAt(x, z, a) {
+	rotate(viewMat, idMat, a, 0, 1, 0)
+	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
 	invert(viewMat, viewMat)
+
+	rotate(spriteMat, idMat, a, 0, 1, 0)
+	rotate(spriteMat, spriteMat, -.9, 1, 0, 0)
+	translate(spriteMat, spriteMat, 0, 1, 0)
 }
 
 function resize() {
