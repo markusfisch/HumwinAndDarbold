@@ -26,7 +26,6 @@ let gl,
 	modelViewMatLoc,
 	farLoc,
 	skyLoc,
-	program,
 	screenWidth,
 	screenHeight
 
@@ -37,27 +36,10 @@ function drawSprite(sprite, modelMat) {
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 }
 
-function initFrame() {
-	gl.viewport(0, 0, screenWidth, screenHeight)
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.useProgram(program)
-
-	gl.activeTexture(gl.TEXTURE0)
-	gl.bindTexture(gl.TEXTURE_2D, atlasTexture)
-	gl.uniform1i(atlasTextureLoc, 0)
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
-	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
-	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
-	gl.uniform4fv(skyLoc, skyColor)
-	gl.uniform1f(farLoc, horizon)
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
-}
-
 function run() {
-	initFrame()
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	translate(cacheMat, idMat, 0, 0, -10)
+	rotate(cacheMat, cacheMat, -.9, 1, 0, 0)
 	drawSprite(0, cacheMat)
 }
 
@@ -70,8 +52,10 @@ function lookAt(x, z) {
 function resize() {
 	gl.canvas.width = screenWidth = gl.canvas.clientWidth
 	gl.canvas.height = screenHeight = gl.canvas.clientHeight
+	gl.viewport(0, 0, screenWidth, screenHeight)
 	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
 		horizon)
+	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
 	lookAt(0, 0)
 }
 
@@ -155,7 +139,8 @@ function init(atlas) {
 		1, -1, 0, // right bottom
 	])
 	uvBuffer = createBuffer(calculateSpriteRects())
-	program = createProgram(
+
+	const program = createProgram(
 		document.getElementById('VertexShader').textContent,
 		document.getElementById('FragmentShader').textContent)
 	gl.enableVertexAttribArray(
@@ -167,6 +152,18 @@ function init(atlas) {
 	atlasTextureLoc = gl.getUniformLocation(program, 'texture')
 	farLoc = gl.getUniformLocation(program, 'far')
 	skyLoc = gl.getUniformLocation(program, 'sky')
+	gl.useProgram(program)
+
+	gl.activeTexture(gl.TEXTURE0)
+	gl.bindTexture(gl.TEXTURE_2D, atlasTexture)
+	gl.uniform1i(atlasTextureLoc, 0)
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
+
+	gl.uniform4fv(skyLoc, skyColor)
+	gl.uniform1f(farLoc, horizon)
 
 	window.onresize = resize
 	resize()
