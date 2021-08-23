@@ -31,11 +31,18 @@ let gl,
 	screenWidth,
 	screenHeight
 
-function drawSprite(sprite, modelMat) {
-	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, sprite << 5)
+function drawModel(n, modelMat) {
+	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
 	multiply(modelViewMat, viewMat, modelMat)
 	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+}
+
+function drawSprite(n, x, y, z) {
+	spriteMat[12] = x
+	spriteMat[13] = y
+	spriteMat[14] = z
+	drawModel(n, spriteMat)
 }
 
 let cameraRotation = 0
@@ -50,23 +57,24 @@ function run() {
 	for (let y = -2; y <= 2; ++y) {
 		for (let x = -2; x <= 2; ++x) {
 			translate(cacheMat, groundMat, x * 2, y * 2, 0)
-			drawSprite(1, cacheMat)
+			drawModel(2, cacheMat)
 		}
 	}
 
-	translate(cacheMat, spriteMat, Math.sin(cameraRotation), 0, 0)
-	drawSprite(0, cacheMat)
+	drawSprite(0, Math.sin(cameraRotation) * 3, 1, 0)
+	drawSprite(0, 4, 1, 4)
+	drawSprite(1, 3, 1, 3)
 }
 
 function lookAt(x, z, a) {
 	rotate(viewMat, idMat, a, 0, 1, 0)
 	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
-	invert(viewMat, viewMat)
 
-	rotate(spriteMat, idMat, a, 0, 1, 0)
-	rotate(spriteMat, spriteMat, -.9, 1, 0, 0)
-	translate(spriteMat, spriteMat, 0, 1, 0)
+	translate(spriteMat, viewMat, 0, 0, 0)
+	spriteMat[12] = spriteMat[13] = spriteMat[14] = 0
+
+	invert(viewMat, viewMat)
 }
 
 function resize() {
@@ -76,7 +84,7 @@ function resize() {
 	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
 		horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
-	lookAt(0, 0)
+	lookAt(0, 0, 0)
 }
 
 function compileShader(type, src) {
@@ -200,7 +208,7 @@ function svgToImg(svg, size) {
 }
 
 function createAtlas() {
-	const sprites = ['A', 'B'],
+	const sprites = ['A', 'B', 'C'],
 		canvas = document.createElement('canvas'),
 		ctx = canvas.getContext('2d')
 	canvas.width = canvas.height = atlasSize
