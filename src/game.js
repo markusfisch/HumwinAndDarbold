@@ -146,9 +146,10 @@ function createTexture(image) {
 function init(atlas) {
 	gl = document.getElementById('Canvas').getContext('webgl')
 	gl.enable(gl.DEPTH_TEST)
-	gl.enable(gl.BLEND)
 	gl.enable(gl.CULL_FACE)
-	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	gl.enable(gl.BLEND)
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[3], skyColor[4])
 
 	atlasTexture = createTexture(atlas)
