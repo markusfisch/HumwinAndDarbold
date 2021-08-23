@@ -78,11 +78,11 @@ precision mediump float;
 #endif
 
 uniform sampler2D texture;
+
 varying vec2 st;
 
 void main() {
-	vec4 color = texture2D(texture, st);
-	gl_FragColor = vec4(color.rgb, color.a);
+	gl_FragColor = texture2D(texture, st);
 }
 </script>
 <script src="mat.js"></script>
