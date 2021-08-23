@@ -64,12 +64,10 @@ uniform mat4 projMat;
 uniform mat4 modelViewMat;
 
 varying vec2 st;
-varying float z;
 
 void main() {
 	gl_Position = projMat * modelViewMat * vec4(vertex, 1.);
 	st = uv;
-	z = gl_Position.z;
 }
 </script>
 <script id="FragmentShader" type="x-shader/x-fragment">
@@ -80,16 +78,11 @@ precision mediump float;
 #endif
 
 uniform sampler2D texture;
-uniform float far;
-uniform vec4 sky;
-
 varying vec2 st;
-varying float z;
 
 void main() {
-	float fog = z / far;
 	vec4 color = texture2D(texture, st);
-	gl_FragColor = vec4((1. - fog) * color.rgb + fog * sky.rgb, color.a);
+	gl_FragColor = vec4(color.rgb, color.a);
 }
 </script>
 <script src="mat.js"></script>

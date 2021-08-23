@@ -26,8 +26,6 @@ let gl,
 	uvLoc,
 	projMatLoc,
 	modelViewMatLoc,
-	farLoc,
-	skyLoc,
 	screenWidth,
 	screenHeight
 
@@ -179,8 +177,6 @@ function init(atlas) {
 	projMatLoc = gl.getUniformLocation(program, 'projMat')
 	modelViewMatLoc = gl.getUniformLocation(program, 'modelViewMat')
 	atlasTextureLoc = gl.getUniformLocation(program, 'texture')
-	farLoc = gl.getUniformLocation(program, 'far')
-	skyLoc = gl.getUniformLocation(program, 'sky')
 	gl.useProgram(program)
 
 	gl.activeTexture(gl.TEXTURE0)
@@ -190,9 +186,6 @@ function init(atlas) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
-
-	gl.uniform4fv(skyLoc, skyColor)
-	gl.uniform1f(farLoc, horizon)
 
 	window.onresize = resize
 	resize()
