@@ -43,9 +43,24 @@ function drawSprite(n, x, y, z) {
 	drawModel(n, spriteMat)
 }
 
-let cameraRotation = 0
+function compareDist(a, b) {
+	return b.dist - a.dist
+}
+
+const objects = [
+	{sprite: 0, x: 0, y: 1, z: 0, update: function() {
+		this.x = Math.sin(cameraRotation) * 3}},
+	{sprite: 0, x: 4, y: 1, z: 4, update: function() {}},
+	{sprite: 1, x: 3, y: 1, z: 3, update: function() {}}
+]
+let cameraRotation = 0,
+	camX, camA,
+	camY, camB,
+	camZ, camC,
+	camL
 function run() {
 	requestAnimationFrame(run)
+
 	lookAt(0, 0, cameraRotation)
 	cameraRotation += .01
 
@@ -59,15 +74,37 @@ function run() {
 		}
 	}
 
-	drawSprite(0, Math.sin(cameraRotation) * 3, 1, 0)
-	drawSprite(0, 4, 1, 4)
-	drawSprite(1, 3, 1, 3)
+	objects.forEach(o => {
+		o.update()
+		// Less operations to calculate the distance from the view plane
+		// than it is to multiply the matrices.
+		// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_plane
+		const dx = camX - o.x,
+			dy = camY - o.y,
+			dz = camZ - o.z,
+			d = (camA*dx + camB*dy + camC*dz) * camL,
+			x = camA*d,
+			y = camB*d,
+			z = camC*d
+		o.dist = x*x + y*y + z*z
+	})
+	objects.sort(compareDist).forEach(o => {
+		drawSprite(o.sprite, o.x, o.y, o.z)
+	})
 }
 
 function lookAt(x, z, a) {
 	rotate(viewMat, idMat, a, 0, 1, 0)
 	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
+
+	camA = viewMat[8]
+	camB = viewMat[9]
+	camC = viewMat[10]
+	camL = 1 / (camA*camA + camB*camB + camC*camC)
+	camX = viewMat[12]
+	camY = viewMat[13]
+	camZ = viewMat[14]
 
 	translate(spriteMat, viewMat, 0, 0, 0)
 	spriteMat[12] = spriteMat[13] = spriteMat[14] = 0
@@ -82,7 +119,7 @@ function resize() {
 	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
 		horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
-	lookAt(0, 0, 0)
+	//lookAt(0, 0, 0)
 }
 
 function compileShader(type, src) {

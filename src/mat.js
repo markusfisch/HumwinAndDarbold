@@ -94,7 +94,7 @@ function rotate(out, a, rad, x, y, z) {
 		b10, b11, b12,
 		b20, b21, b22
 
-	if (Math.abs(len) < .000001) {
+	if (len < .000001) {
 		return
 	}
 
