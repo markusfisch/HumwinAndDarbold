@@ -67,8 +67,9 @@ function run() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	rotate(groundMat, idMat, -Math.PI / 2, 1, 0, 0)
-	for (let y = -2; y <= 2; ++y) {
-		for (let x = -2; x <= 2; ++x) {
+	const r = 2
+	for (let y = -r; y <= r; ++y) {
+		for (let x = -r; x <= r; ++x) {
 			translate(cacheMat, groundMat, x * 2, y * 2, 0)
 			drawModel(2, cacheMat)
 		}
