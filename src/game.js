@@ -2,8 +2,8 @@
 
 const atlasSize = 1024,
 	tileSize = 128,
-	horizon = 1000,
-	skyColor = [0, .5, .9, 1],
+	horizon = 100,
+	skyColor = [0, .9, .5, 1],
 	camPos = [0, 16, 12],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
@@ -19,10 +19,12 @@ const atlasSize = 1024,
 
 let gl,
 	atlasTexture,
-	atlasTextureLoc,
-	vertexBuffer,
+	spriteModelBuffer,
+	spriteUvBuffer,
+	groundModelBuffer,
+	groundUvBuffer,
+	amountOfGroundVertices,
 	vertexLoc,
-	uvBuffer,
 	uvLoc,
 	projMatLoc,
 	modelViewMatLoc,
@@ -66,14 +68,18 @@ function run() {
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rotate(groundMat, idMat, -Math.PI / 2, 1, 0, 0)
-	const r = 2
-	for (let y = -r; y <= r; ++y) {
-		for (let x = -r; x <= r; ++x) {
-			translate(cacheMat, groundMat, x * 2, y * 2, 0)
-			drawModel(2, cacheMat)
-		}
-	}
+	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
+	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.bindBuffer(gl.ARRAY_BUFFER, groundUvBuffer)
+	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, 0)
+
+	multiply(modelViewMat, viewMat, idMat)
+	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
+	gl.drawArrays(gl.TRIANGLES, 0, amountOfGroundVertices)
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, spriteModelBuffer)
+	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
 
 	objects.forEach(o => {
 		o.update()
@@ -144,7 +150,62 @@ function createProgram(vs, fs) {
 	return id
 }
 
-function calculateSpriteRects() {
+function createGroundModel() {
+	const vertices = [],
+		radius = 4
+	for (let y = -radius; y <= radius; ++y) {
+		for (let x = -radius; x <= radius; ++x) {
+			const xx = x * 2, yy = y * 2
+			vertices.push(
+				// A--B
+				// | /
+				// |/
+				// C
+				xx - 1, 0, yy + 1,
+				xx + 1, 0, yy + 1,
+				xx - 1, 0, yy - 1,
+				//    E
+				//   /|
+				//  / |
+				// D--F
+				xx - 1, 0, yy - 1,
+				xx + 1, 0, yy + 1,
+				xx + 1, 0, yy - 1,
+			)
+		}
+	}
+	return vertices
+}
+
+function createGroundUv(l, uvCoords) {
+	const groundUvs = []
+	for (let i = 0; i < l; i += 4) {
+		const offset = (2 + ((i >> 2) % 2)) << 3,
+			left = uvCoords[offset],
+			top = uvCoords[offset + 1],
+			right = uvCoords[offset + 6],
+			bottom = uvCoords[offset + 7]
+		groundUvs.push(
+			// A--B
+			// | /
+			// |/
+			// C
+			left, top,
+			right, top,
+			left, bottom,
+			//    E
+			//   /|
+			//  / |
+			// D--F
+			left, bottom,
+			right, top,
+			right, bottom,
+		)
+	}
+	return groundUvs
+}
+
+function calcUvCoords() {
 	const coords = [],
 		f = 1 / atlasSize,
 		n = .5 * f
@@ -154,11 +215,10 @@ function calculateSpriteRects() {
 				t = y * f,
 				r = l + tileSize * f,
 				b = t + tileSize * f
-			/* TRIANGLE_STRIP order:
-			 *   A--C   A: x, y
-			 *   | /|   B: x, y
-			 *   |/ |   C: x, y
-			 *   B--D   D: x, y */
+			// A--C
+			// | /|
+			// |/ |
+			// B--D
 			coords.push(
 				l + n, t + n,
 				l + n, b - n,
@@ -194,36 +254,46 @@ function init(atlas) {
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.clearColor(skyColor[0], skyColor[1], skyColor[3], skyColor[4])
+	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
 	atlasTexture = createTexture(atlas)
-	vertexBuffer = createBuffer([
-		-1, 1, 0, // left top
-		-1, -1, 0, // left bottom
-		1, 1, 0, // right top
-		1, -1, 0, // right bottom
+
+	const spriteCoords = calcUvCoords(),
+		groundVertices = createGroundModel()
+
+	amountOfGroundVertices = groundVertices.length / 3
+	groundModelBuffer = createBuffer(groundVertices)
+	groundUvBuffer = createBuffer(
+		createGroundUv(amountOfGroundVertices, spriteCoords))
+
+	spriteModelBuffer = createBuffer([
+		// A--C
+		// | /|
+		// |/ |
+		// B--D
+		-1, 1, 0,
+		-1, -1, 0,
+		1, 1, 0,
+		1, -1, 0,
 	])
-	uvBuffer = createBuffer(calculateSpriteRects())
+	spriteUvBuffer = createBuffer(spriteCoords)
 
 	const program = createProgram(
-		document.getElementById('VertexShader').textContent,
-		document.getElementById('FragmentShader').textContent)
+			document.getElementById('VertexShader').textContent,
+			document.getElementById('FragmentShader').textContent),
+		atlasTextureLoc = gl.getUniformLocation(program, 'texture')
 	gl.enableVertexAttribArray(
 		vertexLoc = gl.getAttribLocation(program, "vertex"))
 	gl.enableVertexAttribArray(
 		uvLoc = gl.getAttribLocation(program, "uv"))
 	projMatLoc = gl.getUniformLocation(program, 'projMat')
 	modelViewMatLoc = gl.getUniformLocation(program, 'modelViewMat')
-	atlasTextureLoc = gl.getUniformLocation(program, 'texture')
+
 	gl.useProgram(program)
 
 	gl.activeTexture(gl.TEXTURE0)
 	gl.bindTexture(gl.TEXTURE_2D, atlasTexture)
 	gl.uniform1i(atlasTextureLoc, 0)
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
-	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
-	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
 
 	window.onresize = resize
 	resize()
@@ -239,7 +309,7 @@ function svgToImg(svg, size) {
 }
 
 function createAtlas() {
-	const sprites = ['A', 'B', 'C'],
+	const sprites = ['A', 'B', 'C', 'D'],
 		canvas = document.createElement('canvas'),
 		ctx = canvas.getContext('2d')
 	canvas.width = canvas.height = atlasSize
