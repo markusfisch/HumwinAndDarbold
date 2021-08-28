@@ -309,16 +309,16 @@ function svgToImg(svg, size) {
 }
 
 function createAtlas() {
-	const sprites = ['A', 'B', 'C', 'D'],
+	const sprites = document.getElementsByTagName('g'),
+		nsprites = sprites.length,
 		canvas = document.createElement('canvas'),
 		ctx = canvas.getContext('2d')
 	canvas.width = canvas.height = atlasSize
-	canvas.pending = sprites.length
+	canvas.pending = nsprites
 	let x = 0, y = 0
-	sprites.forEach(name => {
+	for (let i = 0; i < nsprites; ++i) {
 		const xx = x, yy = y
-		svgToImg(document.getElementById(name).innerHTML,
-				tileSize).onload = function() {
+		svgToImg(sprites[i].innerHTML, tileSize).onload = function() {
 			ctx.drawImage(this, xx, yy)
 			--canvas.pending
 		}
@@ -327,7 +327,7 @@ function createAtlas() {
 			x = 0
 			y += tileSize
 		}
-	})
+	}
 	return canvas
 }
 
