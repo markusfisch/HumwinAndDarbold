@@ -50,10 +50,10 @@ function compareDist(a, b) {
 }
 
 const objects = [
-	{sprite: 0, x: 0, y: 1, z: 0, update: function() {
+	{sprite: 0, x: 0, y: 0, z: 0, update: function() {
 		this.x = Math.sin(cameraRotation) * 3}},
-	{sprite: 0, x: 4, y: 1, z: 4, update: function() {}},
-	{sprite: 1, x: 3, y: 1, z: 3, update: function() {}}
+	{sprite: 0, x: 4, y: 0, z: 4, update: function() {}},
+	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
 ]
 let cameraRotation = 0,
 	camX, camA,
@@ -68,6 +68,7 @@ function run() {
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+	// Draw ground.
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundUvBuffer)
@@ -77,6 +78,7 @@ function run() {
 	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 	gl.drawArrays(gl.TRIANGLES, 0, amountOfGroundVertices)
 
+	// Draw sprites.
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteModelBuffer)
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
@@ -105,6 +107,7 @@ function lookAt(x, z, a) {
 	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
 
+	// Normalized vector of the view direction.
 	camA = viewMat[8]
 	camB = viewMat[9]
 	camC = viewMat[10]
@@ -113,8 +116,8 @@ function lookAt(x, z, a) {
 	camY = viewMat[13]
 	camZ = viewMat[14]
 
+	// Copy viewMat. Ignore 12, 13 and 14 because they will be set later.
 	translate(spriteMat, viewMat, 0, 0, 0)
-	spriteMat[12] = spriteMat[13] = spriteMat[14] = 0
 
 	invert(viewMat, viewMat)
 }
@@ -271,10 +274,10 @@ function init(atlas) {
 		// | /|
 		// |/ |
 		// B--D
-		-1, 1, 0,
-		-1, -1, 0,
-		1, 1, 0,
-		1, -1, 0,
+		-.5, 1, 0,
+		-.5, 0, 0,
+		.5, 1, 0,
+		.5, 0, 0,
 	])
 	spriteUvBuffer = createBuffer(spriteCoords)
 
