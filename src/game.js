@@ -136,9 +136,6 @@ function compileShader(type, src) {
 	const id = gl.createShader(type)
 	gl.shaderSource(id, src)
 	gl.compileShader(id)
-	if (!gl.getShaderParameter(id, gl.COMPILE_STATUS)) {
-		throw gl.getShaderInfoLog(id)
-	}
 	return id
 }
 
