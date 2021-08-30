@@ -197,8 +197,7 @@ function lookAt(x, z, a) {
 	camY = viewMat[13]
 	camZ = viewMat[14]
 
-	// Copy viewMat. Ignore 12, 13 and 14 because they will be set later.
-	translate(spriteMat, viewMat, 0, 0, 0)
+	spriteMat.set(viewMat)
 
 	invert(viewMat, viewMat)
 }
