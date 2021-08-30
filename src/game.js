@@ -55,20 +55,17 @@ function compareDist(a, b) {
 }
 
 const objects = [
-	{sprite: 0, x: 0, y: 0, z: 0, update: function() {
-		this.x = Math.sin(cameraRotation) * 3}},
+	{sprite: 0, x: 0, y: 0, z: 0, t: 0, update: function() {
+		this.t += .01
+		this.x = Math.sin(this.t) * 3}},
 	{sprite: 0, x: 4, y: 0, z: 4, update: function() {}},
 	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
 	{sprite: 4, x: -2, y: 0, z: 2, update: function() {}},
 	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
 ],
 	dummy = objects[1]
-let cameraRotation = 0
 function run() {
 	requestAnimationFrame(run)
-
-	lookAt(0, 0, cameraRotation)
-	cameraRotation += .01
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -213,7 +210,7 @@ function resize() {
 	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
 		horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
-	//lookAt(0, 0, 0)
+	lookAt(0, 0, .2)
 }
 
 function compileShader(type, src) {
