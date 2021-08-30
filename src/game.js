@@ -32,6 +32,10 @@ let gl,
 	modelViewMatLoc,
 	screenWidth,
 	screenHeight,
+	camX, camA,
+	camY, camB,
+	camZ, camC,
+	camL,
 	pointers
 
 function drawSprite(n, x, y, z) {
@@ -59,11 +63,7 @@ const objects = [
 	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
 ],
 	dummy = objects[1]
-let cameraRotation = 0,
-	camX, camA,
-	camY, camB,
-	camZ, camC,
-	camL
+let cameraRotation = 0
 function run() {
 	requestAnimationFrame(run)
 
@@ -136,26 +136,6 @@ function getGroundSpot(out, nx, ny) {
 	return rayGround(out, cacheMat[12], cacheMat[13], cacheMat[14], x, y, z)
 }
 
-function lookAt(x, z, a) {
-	rotate(viewMat, idMat, a, 0, 1, 0)
-	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
-	rotate(viewMat, viewMat, -.9, 1, 0, 0)
-
-	// Normalized vector of the view direction.
-	camA = viewMat[8]
-	camB = viewMat[9]
-	camC = viewMat[10]
-	camL = 1 / (camA*camA + camB*camB + camC*camC)
-	camX = viewMat[12]
-	camY = viewMat[13]
-	camZ = viewMat[14]
-
-	// Copy viewMat. Ignore 12, 13 and 14 because they will be set later.
-	translate(spriteMat, viewMat, 0, 0, 0)
-
-	invert(viewMat, viewMat)
-}
-
 function setPointer(event, down) {
 	const touches = event.touches
 	if (touches) {
@@ -204,6 +184,26 @@ function pointerMove(event) {
 
 function pointerDown(event) {
 	setPointer(event, true)
+}
+
+function lookAt(x, z, a) {
+	rotate(viewMat, idMat, a, 0, 1, 0)
+	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
+	rotate(viewMat, viewMat, -.9, 1, 0, 0)
+
+	// Normalized vector of the view direction.
+	camA = viewMat[8]
+	camB = viewMat[9]
+	camC = viewMat[10]
+	camL = 1 / (camA*camA + camB*camB + camC*camC)
+	camX = viewMat[12]
+	camY = viewMat[13]
+	camZ = viewMat[14]
+
+	// Copy viewMat. Ignore 12, 13 and 14 because they will be set later.
+	translate(spriteMat, viewMat, 0, 0, 0)
+
+	invert(viewMat, viewMat)
 }
 
 function resize() {
