@@ -1,8 +1,6 @@
 'use strict'
 
-const atlasSize = 1024,
-	tileSize = 128,
-	horizon = 100,
+const horizon = 100,
 	skyColor = [0, .9, .5, 1],
 	camPos = [0, 16, 12],
 	idMat = new Float32Array([
@@ -15,7 +13,8 @@ const atlasSize = 1024,
 	modelViewMat = new Float32Array(16),
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
-	cacheMat = new Float32Array(16)
+	cacheMat = new Float32Array(16),
+	spriteSizes = []
 
 let gl,
 	atlasTexture,
@@ -23,7 +22,7 @@ let gl,
 	spriteUvBuffer,
 	groundModelBuffer,
 	groundUvBuffer,
-	amountOfGroundVertices,
+	groundLength,
 	vertexLoc,
 	uvLoc,
 	projMatLoc,
@@ -42,7 +41,9 @@ function drawSprite(n, x, y, z) {
 	spriteMat[12] = x
 	spriteMat[13] = y
 	spriteMat[14] = z
-	drawModel(n, spriteMat)
+	const size = spriteSizes[n]
+	scale(cacheMat, spriteMat, size[0], size[1], 1)
+	drawModel(n, cacheMat)
 }
 
 function compareDist(a, b) {
@@ -54,6 +55,8 @@ const objects = [
 		this.x = Math.sin(cameraRotation) * 3}},
 	{sprite: 0, x: 4, y: 0, z: 4, update: function() {}},
 	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
+	{sprite: 4, x: -2, y: 0, z: 2, update: function() {}},
+	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
 ]
 let cameraRotation = 0,
 	camX, camA,
@@ -76,7 +79,7 @@ function run() {
 
 	multiply(modelViewMat, viewMat, idMat)
 	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
-	gl.drawArrays(gl.TRIANGLES, 0, amountOfGroundVertices)
+	gl.drawArrays(gl.TRIANGLES, 0, groundLength)
 
 	// Draw sprites.
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteModelBuffer)
@@ -205,31 +208,6 @@ function createGroundUv(l, uvCoords) {
 	return groundUvs
 }
 
-function calcUvCoords() {
-	const coords = [],
-		f = 1 / atlasSize,
-		n = .5 * f
-	for (let y = 0; y < atlasSize; y += tileSize) {
-		for (let x = 0; x < atlasSize; x += tileSize) {
-			const l = x * f,
-				t = y * f,
-				r = l + tileSize * f,
-				b = t + tileSize * f
-			// A--C
-			// | /|
-			// |/ |
-			// B--D
-			coords.push(
-				l + n, t + n,
-				l + n, b - n,
-				r - n, t + n,
-				r - n, b - n,
-			)
-		}
-	}
-	return coords
-}
-
 function createBuffer(data) {
 	const id = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, id)
@@ -256,15 +234,12 @@ function init(atlas) {
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
-	atlasTexture = createTexture(atlas)
+	atlasTexture = createTexture(atlas.canvas)
 
-	const spriteCoords = calcUvCoords(),
-		groundVertices = createGroundModel()
-
-	amountOfGroundVertices = groundVertices.length / 3
+	const groundVertices = createGroundModel()
+	groundLength = groundVertices.length / 3
 	groundModelBuffer = createBuffer(groundVertices)
-	groundUvBuffer = createBuffer(
-		createGroundUv(amountOfGroundVertices, spriteCoords))
+	groundUvBuffer = createBuffer(createGroundUv(groundLength, atlas.coords))
 
 	spriteModelBuffer = createBuffer([
 		// A--C
@@ -276,7 +251,7 @@ function init(atlas) {
 		.5, 1, 0,
 		.5, 0, 0,
 	])
-	spriteUvBuffer = createBuffer(spriteCoords)
+	spriteUvBuffer = createBuffer(atlas.coords)
 
 	const program = createProgram(
 			document.getElementById('VertexShader').textContent,
@@ -301,38 +276,119 @@ function init(atlas) {
 	run()
 }
 
-function svgToImg(svg, size) {
+function svgToImg(svg, sw, sh, dw, dh) {
 	const img = new Image()
 	img.src = `data:image/svg+xml;base64,${btoa(
-		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}">${svg}</svg>`)}`
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${
+		sw} ${sh}" width="${dw}" height="${dh}">${svg}</svg>`)}`
 	return img
 }
 
-function createAtlas() {
-	const sprites = document.getElementsByTagName('g'),
-		nsprites = sprites.length,
-		canvas = document.createElement('canvas'),
-		ctx = canvas.getContext('2d')
-	canvas.width = canvas.height = atlasSize
-	canvas.pending = nsprites
-	let x = 0, y = 0
-	for (let i = 0; i < nsprites; ++i) {
-		const xx = x, yy = y
-		svgToImg(sprites[i].innerHTML, tileSize).onload = function() {
-			ctx.drawImage(this, xx, yy)
-			--canvas.pending
+// Packing algorithm from:
+// http://www.blackpawn.com/texts/lightmaps/default.html
+function atlasInsert(node, w, h) {
+	if (node.l) {
+		return atlasInsert(node.l, w, h) || atlasInsert(node.r, w, h)
+	}
+	if (node.img) {
+		return
+	}
+	const rc = node.rc,
+		rw = rc.r - rc.l,
+		rh = rc.b - rc.t
+	if (rw < w || rh < h) {
+		return
+	}
+	if (rw == w && rh == h) {
+		return node
+	}
+	node.l = {}
+	node.r = {}
+	if (rw - w > rh - h) {
+		node.l.rc = {
+			l: rc.l,
+			t: rc.t,
+			r: rc.l + w - 1,
+			b: rc.b,
 		}
-		x += tileSize
-		if (x >= atlasSize) {
-			x = 0
-			y += tileSize
+		node.r.rc = {
+			l: rc.l + w,
+			t: rc.t,
+			r: rc.r,
+			b: rc.b,
+		}
+	} else {
+		node.l.rc = {
+			l: rc.l,
+			t: rc.t,
+			r: rc.r,
+			b: rc.t + h - 1,
+		}
+		node.r.rc = {
+			l: rc.l,
+			t: rc.t + h,
+			r: rc.r,
+			b: rc.b,
 		}
 	}
-	return canvas
+	return node.l
+}
+
+function createAtlas() {
+	const atlasSize = 1024,
+		svgSize = 100,
+		tileSize = 128,
+		magnify = tileSize / svgSize,
+		f = 1 / atlasSize,
+		n = .5 * f,
+		canvas = document.createElement('canvas'),
+		ctx = canvas.getContext('2d'),
+		nodes = {rc: {l: 0, t: 0, r: atlasSize, b: atlasSize}},
+		coords = [],
+		sprites = document.getElementsByTagName('g')
+	canvas.width = canvas.height = atlasSize
+	canvas.pending = sprites.length
+	for (let i = 0, l = canvas.pending; i < l; ++i) {
+		const e = sprites[i],
+			size = e.textContent.trim().split('x'),
+			sw = size[0] || svgSize,
+			sh = size[1] || svgSize,
+			dw = sw * magnify | 0,
+			dh = sh * magnify | 0,
+			node = atlasInsert(nodes, dw, dh)
+		if (!node) {
+			return
+		}
+		node.img = 1
+		const rc = node.rc,
+			l = rc.l * f,
+			t = rc.t * f,
+			r = l + dw * f,
+			b = t + dh * f
+		// A--C
+		// | /|
+		// |/ |
+		// B--D
+		coords.push(
+			l + n, t + n,
+			l + n, b - n,
+			r - n, t + n,
+			r - n, b - n,
+		)
+		spriteSizes.push([dw / tileSize, dh / tileSize])
+		svgToImg(e.innerHTML, sw, sh, dw, dh).onload = function() {
+			ctx.drawImage(this, node.rc.l, node.rc.t)
+			--canvas.pending
+		}
+	}
+	return {
+		canvas: canvas,
+		coords: coords
+	}
 }
 
 function waitForAtlas(atlas) {
-	if (atlas.pending > 0) {
+	if (atlas.canvas.pending > 0) {
 		setTimeout(function() {
 			waitForAtlas(atlas)
 		}, 100)
