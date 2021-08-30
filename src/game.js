@@ -184,8 +184,9 @@ function pointerDown(event) {
 }
 
 function lookAt(x, z, a) {
-	rotate(viewMat, idMat, a, 0, 1, 0)
-	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
+	translate(viewMat, idMat, x, 0, z)
+	rotate(viewMat, viewMat, a, 0, 1, 0)
+	translate(viewMat, viewMat, camPos[0], camPos[1], camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
 
 	// Normalized vector of the view direction.
