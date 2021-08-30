@@ -34,20 +34,16 @@ let gl,
 	screenHeight,
 	pointers
 
-function drawModel(n, modelMat) {
-	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
-	multiply(modelViewMat, viewMat, modelMat)
-	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-}
-
 function drawSprite(n, x, y, z) {
 	spriteMat[12] = x
 	spriteMat[13] = y
 	spriteMat[14] = z
 	const size = spriteSizes[n]
 	scale(cacheMat, spriteMat, size[0], size[1], 1)
-	drawModel(n, cacheMat)
+	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
+	multiply(modelViewMat, viewMat, cacheMat)
+	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 }
 
 function compareDist(a, b) {
