@@ -14,7 +14,10 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
-	spriteSizes = []
+	spriteSizes = [],
+	pointerSpot = [0, 0, 0],
+	pointersX = [],
+	pointersY = []
 
 let gl,
 	atlasTexture,
@@ -28,7 +31,8 @@ let gl,
 	projMatLoc,
 	modelViewMatLoc,
 	screenWidth,
-	screenHeight
+	screenHeight,
+	pointers
 
 function drawModel(n, modelMat) {
 	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
@@ -57,7 +61,8 @@ const objects = [
 	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
 	{sprite: 4, x: -2, y: 0, z: 2, update: function() {}},
 	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
-]
+],
+	dummy = objects[1]
 let cameraRotation = 0,
 	camX, camA,
 	camY, camB,
@@ -105,6 +110,36 @@ function run() {
 	})
 }
 
+function rayGround(out, lx, ly, lz, dx, dy, dz) {
+	const denom = -1*dy
+	if (denom > .0001) {
+		const t = -1*-ly / denom
+		out[0] = lx + dx*t
+		out[1] = ly + dy*t
+		out[2] = lz + dz*t
+		return t >= 0
+	}
+	return false
+}
+
+function getGroundSpot(out, nx, ny) {
+	invert(cacheMat, projMat)
+	const cx = cacheMat[0]*nx + cacheMat[4]*ny + -cacheMat[8] + cacheMat[12],
+		cy = cacheMat[1]*nx + cacheMat[5]*ny + -cacheMat[9] + cacheMat[13]
+	invert(cacheMat, viewMat)
+	let x = cacheMat[0]*cx + cacheMat[4]*cy + -cacheMat[8],
+		y = cacheMat[1]*cx + cacheMat[5]*cy + -cacheMat[9],
+		z = cacheMat[2]*cx + cacheMat[6]*cy + -cacheMat[10],
+		len = x*x + y*y + z*z
+	if (len > 0) {
+		len = 1 / Math.sqrt(len)
+	}
+	x *= len
+	y *= len
+	z *= len
+	return rayGround(out, cacheMat[12], cacheMat[13], cacheMat[14], x, y, z)
+}
+
 function lookAt(x, z, a) {
 	rotate(viewMat, idMat, a, 0, 1, 0)
 	translate(viewMat, viewMat, x + camPos[0], camPos[1], z + camPos[2])
@@ -123,6 +158,56 @@ function lookAt(x, z, a) {
 	translate(spriteMat, viewMat, 0, 0, 0)
 
 	invert(viewMat, viewMat)
+}
+
+function setPointer(event, down) {
+	const touches = event.touches
+	if (touches) {
+		pointers = touches.length
+		for (let i = pointers; i--;) {
+			const t = touches[i]
+			pointersX[i] = t.pageX
+			pointersY[i] = t.pageY
+		}
+	} else if (!down) {
+		pointers = 0
+	} else {
+		pointers = 1
+		pointersX[0] = event.pageX
+		pointersY[0] = event.pageY
+	}
+
+	// Map to WebGL coordinates.
+	for (let i = pointers; i--;) {
+		pointersX[i] = (2 * pointersX[i]) / screenWidth - 1
+		pointersY[i] = 1 - (2 * pointersY[i]) / screenHeight
+	}
+
+	event.stopPropagation()
+}
+
+function pointerCancel(event) {
+	setPointer(event, false)
+}
+
+function pointerUp(event) {
+	// Because onMouseUp() will still fire after onMouseOut().
+	if (pointers < 1) {
+		return
+	}
+	setPointer(event, false)
+	if (getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
+		dummy.x = pointerSpot[0]
+		dummy.z = pointerSpot[2]
+	}
+}
+
+function pointerMove(event) {
+	setPointer(event, pointers)
+}
+
+function pointerDown(event) {
+	setPointer(event, true)
 }
 
 function resize() {
@@ -272,6 +357,30 @@ function init(atlas) {
 
 	window.onresize = resize
 	resize()
+
+	document.onmousedown = pointerDown
+	document.onmousemove = pointerMove
+	document.onmouseup = pointerUp
+	document.onmouseout = pointerCancel
+
+	if ('ontouchstart' in document) {
+		document.ontouchstart = pointerDown
+		document.ontouchmove = pointerMove
+		document.ontouchend = pointerUp
+		document.ontouchleave = pointerCancel
+		document.ontouchcancel = pointerCancel
+
+		// Prevent pinch/zoom on iOS 11.
+		document.addEventListener('gesturestart', function(event) {
+			event.preventDefault()
+		}, false)
+		document.addEventListener('gesturechange', function(event) {
+			event.preventDefault()
+		}, false)
+		document.addEventListener('gestureend', function(event) {
+			event.preventDefault()
+		}, false)
+	}
 
 	run()
 }
