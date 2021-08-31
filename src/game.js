@@ -35,6 +35,8 @@ let gl,
 	camY, camB,
 	camZ, camC,
 	camL,
+	lookX,
+	lookZ,
 	pointers
 
 function drawSprite(n, x, y, z) {
@@ -53,16 +55,43 @@ function compareDist(a, b) {
 	return b.dist - a.dist
 }
 
+function moveToTarget(e, tx, tz, step) {
+	const dx = tx - e.x,
+		dz = tz - e.z,
+		d = dx*dx + dz*dz
+	if (d == 0) return
+	if (d < step * step) {
+		e.x = tx
+		e.z = tz
+	} else {
+		const f = step / Math.sqrt(d)
+		e.x += dx * f
+		e.z += dz * f
+	}
+}
+
 const objects = [
-	{sprite: 0, x: 0, y: 0, z: 0, t: 0, update: function() {
+	{sprite: 1, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0}, update: function() {
+		moveToTarget(this, this.tx, this.tz, .1)
+		const dx = lookX - this.x,
+			dz = lookZ - this.z,
+			d = dx*dx + dz*dz
+		if (d > 0) {
+			const dd = Math.sqrt(d) - 2
+			moveToTarget(this.c, this.tx, this.tz, dd > .01 ? dd : .05)
+			lookAt(this.c.x, this.c.z, .2)
+		}
+	}},
+	{sprite: 0, x: 0, y: 0, z: -2, t: 0, update: function() {
 		this.t += .01
-		this.x = Math.sin(this.t) * 3}},
+		this.x = Math.sin(this.t) * 3
+	}},
 	{sprite: 0, x: 4, y: 0, z: 4, update: function() {}},
 	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
 	{sprite: 4, x: -2, y: 0, z: 2, update: function() {}},
 	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
 ],
-	dummy = objects[1]
+	player = objects[0]
 function run() {
 	requestAnimationFrame(run)
 
@@ -132,6 +161,13 @@ function getGroundSpot(out, nx, ny) {
 	return rayGround(out, cacheMat[12], cacheMat[13], cacheMat[14], x, y, z)
 }
 
+function moveToPointer() {
+	if (getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
+		player.tx = pointerSpot[0]
+		player.tz = pointerSpot[2]
+	}
+}
+
 function setPointer(event, down) {
 	const touches = event.touches
 	if (touches) {
@@ -168,21 +204,24 @@ function pointerUp(event) {
 		return
 	}
 	setPointer(event, false)
-	if (getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
-		dummy.x = pointerSpot[0]
-		dummy.z = pointerSpot[2]
-	}
 }
 
 function pointerMove(event) {
 	setPointer(event, pointers)
+	if (pointers > 0) {
+		moveToPointer()
+	}
 }
 
 function pointerDown(event) {
 	setPointer(event, true)
+	moveToPointer()
 }
 
 function lookAt(x, z, a) {
+	lookX = x
+	lookZ = z
+
 	translate(viewMat, idMat, x, 0, z)
 	rotate(viewMat, viewMat, a, 0, 1, 0)
 	translate(viewMat, viewMat, camPos[0], camPos[1], camPos[2])
@@ -438,14 +477,15 @@ function createAtlas() {
 	const atlasSize = 1024,
 		svgSize = 100,
 		tileSize = 128,
-		magnify = tileSize / svgSize,
-		f = 1 / atlasSize,
-		n = .5 * f,
-		canvas = document.createElement('canvas'),
-		ctx = canvas.getContext('2d'),
+		scale = tileSize / svgSize,
+		border = 1,
+		normalizedAtlasSize = 1 / atlasSize,
+		pad = (border + .5) * normalizedAtlasSize,
 		nodes = {rc: {l: 0, t: 0, r: atlasSize, b: atlasSize}},
 		coords = [],
-		sprites = document.getElementsByTagName('g')
+		sprites = document.getElementsByTagName('g'),
+		canvas = document.createElement('canvas'),
+		ctx = canvas.getContext('2d')
 	canvas.width = canvas.height = atlasSize
 	canvas.pending = sprites.length
 	for (let i = 0, l = canvas.pending; i < l; ++i) {
@@ -453,31 +493,30 @@ function createAtlas() {
 			size = e.textContent.trim().split('x'),
 			sw = size[0] || svgSize,
 			sh = size[1] || svgSize,
-			dw = sw * magnify | 0,
-			dh = sh * magnify | 0,
-			node = atlasInsert(nodes, dw, dh)
+			dw = sw * scale | 0,
+			dh = sh * scale | 0,
+			node = atlasInsert(nodes, dw + border * 2, dh + border * 2)
 		if (!node) {
 			return
 		}
-		node.img = 1
 		const rc = node.rc,
-			l = rc.l * f,
-			t = rc.t * f,
-			r = l + dw * f,
-			b = t + dh * f
+			l = rc.l * normalizedAtlasSize,
+			t = rc.t * normalizedAtlasSize,
+			r = l + dw * normalizedAtlasSize,
+			b = t + dh * normalizedAtlasSize
 		// A--C
 		// | /|
 		// |/ |
 		// B--D
 		coords.push(
-			l + n, t + n,
-			l + n, b - n,
-			r - n, t + n,
-			r - n, b - n,
+			l + pad, t + pad,
+			l + pad, b - pad,
+			r - pad, t + pad,
+			r - pad, b - pad,
 		)
 		spriteSizes.push([dw / tileSize, dh / tileSize])
-		svgToImg(e.innerHTML, sw, sh, dw, dh).onload = function() {
-			ctx.drawImage(this, node.rc.l, node.rc.t)
+		node.img = svgToImg(e.innerHTML, sw, sh, dw, dh).onload = function() {
+			ctx.drawImage(this, node.rc.l + border, node.rc.t + border)
 			--canvas.pending
 		}
 	}
