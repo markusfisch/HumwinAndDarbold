@@ -72,6 +72,9 @@ function moveToTarget(e, tx, tz, step) {
 const objects = [
 	{sprite: 1, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0}, update: function() {
 		moveToTarget(this, this.tx, this.tz, .1)
+		if (pointers > 0) {
+			moveToPointer()
+		}
 		const dx = lookX - this.x,
 			dz = lookZ - this.z,
 			d = dx*dx + dz*dz
