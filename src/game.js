@@ -34,7 +34,6 @@ let gl,
 	camX, camA,
 	camY, camB,
 	camZ, camC,
-	camL,
 	lookX,
 	lookZ,
 	pointers
@@ -120,7 +119,7 @@ function run() {
 		const dx = camX - o.x,
 			dy = camY - o.y,
 			dz = camZ - o.z,
-			d = (camA*dx + camB*dy + camC*dz) * camL,
+			d = camA*dx + camB*dy + camC*dz,
 			x = camA*d,
 			y = camB*d,
 			z = camC*d
@@ -231,7 +230,7 @@ function lookAt(x, z, a) {
 	camA = viewMat[8]
 	camB = viewMat[9]
 	camC = viewMat[10]
-	camL = 1 / (camA*camA + camB*camB + camC*camC)
+	// View origin.
 	camX = viewMat[12]
 	camY = viewMat[13]
 	camZ = viewMat[14]
