@@ -209,7 +209,6 @@ function resize() {
 	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
 		horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
-	lookAt(0, 0, .2)
 }
 
 function compileShader(type, src) {
@@ -348,6 +347,7 @@ function init(atlas) {
 
 	window.onresize = resize
 	resize()
+	lookAt(0, 0, .2)
 
 	document.onmousedown = pointerDown
 	document.onmousemove = pointerMove
