@@ -20,7 +20,6 @@ const horizon = 100,
 	pointersY = []
 
 let gl,
-	atlasTexture,
 	spriteModelBuffer,
 	spriteUvBuffer,
 	groundModelBuffer,
@@ -312,9 +311,8 @@ function init(atlas) {
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
-	atlasTexture = createTexture(atlas.canvas)
-
-	const groundVertices = createGroundModel()
+	const atlasTexture = createTexture(atlas.canvas),
+		groundVertices = createGroundModel()
 	groundLength = groundVertices.length / 3
 	groundModelBuffer = createBuffer(groundVertices)
 	groundUvBuffer = createBuffer(createGroundUv(groundLength, atlas.coords))
