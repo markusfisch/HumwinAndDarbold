@@ -58,6 +58,8 @@ function moveToTarget(e, tx, tz, step) {
 	const dx = tx - e.x,
 		dz = tz - e.z,
 		d = dx*dx + dz*dz
+	e.dx = dx
+	e.dz = dz
 	if (d == 0) return
 	if (d < step * step) {
 		e.x = tx
@@ -70,8 +72,15 @@ function moveToTarget(e, tx, tz, step) {
 }
 
 const objects = [
-	{sprite: 1, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0}, update: function() {
-		moveToTarget(this, this.tx, this.tz, .1)
+	{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0}, update: function() {
+		moveToTarget(this, this.tx, this.tz, .07)
+		if (this.dx > 0) {
+			this.sprite = 6
+		} else if (this.dx < 0) {
+			this.sprite = 5
+		} else {
+			this.sprite = 0
+		}
 		if (pointers > 0) {
 			moveToPointer()
 		}
