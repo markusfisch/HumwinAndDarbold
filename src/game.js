@@ -36,7 +36,8 @@ let gl,
 	camZ, camC,
 	lookX,
 	lookZ,
-	pointers
+	pointers,
+	now
 
 function drawSprite(n, x, y, z) {
 	spriteMat[12] = x
@@ -72,18 +73,25 @@ function moveToTarget(e, tx, tz, step) {
 }
 
 const objects = [
-	{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0}, update: function() {
+	{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
+	last: 0, frame: 0,
+	update: function() {
 		moveToTarget(this, this.tx, this.tz, .07)
+		if (now - this.last > 200) {
+			++this.frame
+			this.last = now
+		}
 		if (this.dx > 0) {
-			this.sprite = 6
+			this.sprite = 7 + this.frame % 2
 		} else if (this.dx < 0) {
-			this.sprite = 5
+			this.sprite = 5 + this.frame % 2
 		} else {
 			this.sprite = 0
 		}
 		if (pointers > 0) {
 			moveToPointer()
 		}
+		// Make camera follow with a slight delay.
 		const dx = lookX - this.x,
 			dz = lookZ - this.z,
 			d = dx*dx + dz*dz
@@ -105,6 +113,7 @@ const objects = [
 	player = objects[0]
 function run() {
 	requestAnimationFrame(run)
+	now = Date.now()
 
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
