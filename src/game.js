@@ -78,7 +78,7 @@ const objects = [
 		if (d > 0) {
 			const dd = Math.sqrt(d) - 2
 			moveToTarget(this.c, this.tx, this.tz, dd > .01 ? dd : .05)
-			lookAt(this.c.x, this.c.z, .2)
+			lookAt(this.c.x, this.c.z)
 		}
 	}},
 	{sprite: 0, x: 0, y: 0, z: -2, t: 0, update: function() {
@@ -217,12 +217,12 @@ function pointerDown(event) {
 	moveToPointer()
 }
 
-function lookAt(x, z, a) {
+function lookAt(x, z) {
 	lookX = x
 	lookZ = z
 
 	translate(viewMat, idMat, x, 0, z)
-	rotate(viewMat, viewMat, a, 0, 1, 0)
+	rotate(viewMat, viewMat, .2, 0, 1, 0)
 	translate(viewMat, viewMat, camPos[0], camPos[1], camPos[2])
 	rotate(viewMat, viewMat, -.9, 1, 0, 0)
 
@@ -385,7 +385,7 @@ function init(atlas) {
 
 	window.onresize = resize
 	resize()
-	lookAt(0, 0, .2)
+	lookAt(0, 0)
 
 	document.onmousedown = pointerDown
 	document.onmousemove = pointerMove
