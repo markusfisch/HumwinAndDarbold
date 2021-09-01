@@ -15,6 +15,7 @@ const horizon = 100,
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
 	spriteSizes = [],
+	ssize = [],
 	pointerSpot = [0, 0, 0],
 	pointersX = [],
 	pointersY = [],
@@ -30,8 +31,6 @@ let gl,
 	uvLoc,
 	projMatLoc,
 	modelViewMatLoc,
-	screenWidth,
-	screenHeight,
 	camX, camA,
 	camY, camB,
 	camZ, camC,
@@ -204,8 +203,8 @@ function setPointer(event, down) {
 
 	// Map to WebGL coordinates.
 	for (let i = pointers; i--;) {
-		pointersX[i] = (2 * pointersX[i]) / screenWidth - 1
-		pointersY[i] = 1 - (2 * pointersY[i]) / screenHeight
+		pointersX[i] = (2 * pointersX[i]) / ssize[0] - 1
+		pointersY[i] = 1 - (2 * pointersY[i]) / ssize[1]
 	}
 
 	event.stopPropagation()
@@ -259,11 +258,10 @@ function lookAt(x, z) {
 }
 
 function resize() {
-	gl.canvas.width = screenWidth = gl.canvas.clientWidth
-	gl.canvas.height = screenHeight = gl.canvas.clientHeight
-	gl.viewport(0, 0, screenWidth, screenHeight)
-	setPerspective(projMat, Math.PI * .125, screenWidth / screenHeight, .1,
-		horizon)
+	gl.canvas.width = ssize[0] = gl.canvas.clientWidth
+	gl.canvas.height = ssize[1] = gl.canvas.clientHeight
+	gl.viewport(0, 0, ssize[0], ssize[1])
+	setPerspective(projMat, Math.PI * .125, ssize[0] / ssize[1], .1, horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
 }
 
