@@ -497,7 +497,7 @@ function createAtlas() {
 		scale = tileSize / svgSize,
 		border = 1,
 		normalizedAtlasSize = 1 / atlasSize,
-		pad = (border + .5) * normalizedAtlasSize,
+		pad = (border + 2) * normalizedAtlasSize,
 		nodes = {rc: {l: 0, t: 0, r: atlasSize, b: atlasSize}},
 		coords = [],
 		sprites = document.getElementsByTagName('g'),
