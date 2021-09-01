@@ -17,7 +17,8 @@ const horizon = 100,
 	spriteSizes = [],
 	pointerSpot = [0, 0, 0],
 	pointersX = [],
-	pointersY = []
+	pointersY = [],
+	compareDist = (a, b) => b.dist - a.dist
 
 let gl,
 	spriteModelBuffer,
@@ -49,10 +50,6 @@ function drawSprite(n, x, y, z) {
 	multiply(modelViewMat, viewMat, cacheMat)
 	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-}
-
-function compareDist(a, b) {
-	return b.dist - a.dist
 }
 
 function moveToTarget(e, tx, tz, step) {
