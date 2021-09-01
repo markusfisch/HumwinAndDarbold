@@ -1,25 +1,16 @@
 #!/usr/bin/env bash
 while read -r
 do
-	# collect referenced scripts
+	# embed referenced script
 	[[ $REPLY == *\<script\ src=* ]] && {
 		SRC=${REPLY#*src=\"}
 		SRC=${SRC%%\"*}
 		[ -r "$SRC" ] && {
-			SCRIPTS=$SCRIPTS${SCRIPTS:+ }$SRC
+			echo -n '<script>'
+			esbuild --minify "$SRC"
+			echo -n '</script>'
 			continue
 		}
-	}
-	# embed scripts
-	[ "$SCRIPTS" ] && {
-		echo -n '<script>'
-		cat <<EOF | esbuild --minify
-'use strict'
-$(cat $SCRIPTS | sed "s/['\"]use strict['\"]//")
-EOF
-		echo -n '</script>'
-		SCRIPTS=
-		continue
 	}
 	# remove indent
 	REPLY=${REPLY##*$'\t'}

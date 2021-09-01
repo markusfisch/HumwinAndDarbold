@@ -6,7 +6,7 @@ $(ARCHIVE): $(BUILD)
 	@echo "$$((10000000 / 13312 * $$(stat -f '%z' $@) / 100000))%" \
 		"($$(stat -f '%z' $@) bytes, $$((13312 - $$(stat -f '%z' $@))) left)"
 
-$(BUILD): src/game.js src/mat.js src/index.html
+$(BUILD): src/src.js src/index.html
 	cd src && bash ../bin/squeeze.sh < index.html > ../$@
 
 clean:
