@@ -234,10 +234,6 @@ function pointerCancel(event) {
 }
 
 function pointerUp(event) {
-	// Because onMouseUp() will still fire after onMouseOut().
-	if (pointers < 1) {
-		return
-	}
 	setPointer(event, false)
 }
 
