@@ -59,8 +59,6 @@ function moveToTarget(e, tx, tz, step) {
 	const dx = tx - e.x,
 		dz = tz - e.z,
 		d = dx*dx + dz*dz
-	e.dx = dx
-	e.dz = dz
 	if (d == 0) return 0
 	if (d < step * step) {
 		e.x = tx
@@ -85,9 +83,18 @@ const objects = [
 			++this.frame
 			this.last = now
 		}
-		if (this.dx > 0) {
+		// To check whether (tx, tz) is left or right (on the screen)
+		// from the camera/player vector (x - camX, z - camZ), we can
+		// use the perpendicular vector (z - camZ, camX - x) which is
+		// always pointing in the same relative direction. Calculating
+		// the dot product with the vector (tx - x, tz - z) tells us
+		// if it has the same general direction (> 0).
+		const dot =
+			(this.z - camZ) * (this.tx - this.x) +
+			(camX - this.x) * (this.tz - this.z)
+		if (dot < 0) {
 			this.sprite = 7 + this.frame % 2
-		} else if (this.dx < 0) {
+		} else if (dot > 0) {
 			this.sprite = 5 + this.frame % 2
 		} else {
 			this.sprite = 0
