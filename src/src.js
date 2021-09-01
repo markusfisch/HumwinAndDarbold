@@ -14,6 +14,7 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
+	map = new Uint8Array(1048576),
 	spriteSizes = [],
 	ssize = [],
 	pointerSpot = [0, 0, 0],
@@ -26,7 +27,10 @@ let gl,
 	spriteUvBuffer,
 	groundModelBuffer,
 	groundUvBuffer,
+	groundUvs,
 	groundLength,
+	groundSize,
+	atlasCoords,
 	vertexLoc,
 	uvLoc,
 	projMatLoc,
@@ -57,22 +61,26 @@ function moveToTarget(e, tx, tz, step) {
 		d = dx*dx + dz*dz
 	e.dx = dx
 	e.dz = dz
-	if (d == 0) return
+	if (d == 0) return 0
 	if (d < step * step) {
 		e.x = tx
 		e.z = tz
+		return 1
 	} else {
 		const f = step / Math.sqrt(d)
 		e.x += dx * f
 		e.z += dz * f
 	}
+	return 0
 }
 
 const objects = [
 	{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
 	last: 0, frame: 0,
 	update: function() {
-		moveToTarget(this, this.tx, this.tz, .07)
+		if (moveToTarget(this, this.tx, this.tz, .07) && pointers > 0) {
+			moveToPointer()
+		}
 		if (now - this.last > 200) {
 			++this.frame
 			this.last = now
@@ -83,9 +91,6 @@ const objects = [
 			this.sprite = 5 + this.frame % 2
 		} else {
 			this.sprite = 0
-		}
-		if (pointers > 0) {
-			moveToPointer()
 		}
 		// Make camera follow with a slight delay.
 		const dx = lookX - this.x,
@@ -119,7 +124,14 @@ function run() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundUvBuffer)
 	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, 0)
 
-	multiply(modelViewMat, viewMat, idMat)
+	const mx = lookX >> 1, mz = lookZ >> 1
+	updateGroundUvs(mx, mz)
+	gl.bufferData(gl.ARRAY_BUFFER, groundUvs, gl.DYNAMIC_DRAW)
+
+	cacheMat.set(idMat)
+	cacheMat[12] = mx << 1
+	cacheMat[14] = mz << 1
+	multiply(modelViewMat, viewMat, cacheMat)
 	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 	gl.drawArrays(gl.TRIANGLES, 0, groundLength)
 
@@ -283,9 +295,42 @@ function createProgram(vs, fs) {
 	return id
 }
 
+function updateGroundUvs(x, z) {
+	const skip = 1024 - groundSize, half = groundSize >> 1
+	for (let t = 0, o = (512 + z - half) * 1024 + (512 + x - half), i = 0;
+			t < groundSize; ++t, o += skip) {
+		for (let s = 0; s < groundSize; ++s, ++o) {
+			const offset = map[o] << 3,
+				left = atlasCoords[offset],
+				top = atlasCoords[offset + 1],
+				right = atlasCoords[offset + 6],
+				bottom = atlasCoords[offset + 7]
+			// A--B
+			// | /
+			// |/
+			// C
+			groundUvs[i++] = left
+			groundUvs[i++] = top
+			groundUvs[i++] = right
+			groundUvs[i++] = top
+			groundUvs[i++] = left
+			groundUvs[i++] = bottom
+			//    E
+			//   /|
+			//  / |
+			// D--F
+			groundUvs[i++] = left
+			groundUvs[i++] = bottom
+			groundUvs[i++] = right
+			groundUvs[i++] = top
+			groundUvs[i++] = right
+			groundUvs[i++] = bottom
+		}
+	}
+}
+
 function createGroundModel() {
-	const vertices = [],
-		radius = 4
+	const vertices = [], radius = 17
 	for (let y = -radius; y <= radius; ++y) {
 		for (let x = -radius; x <= radius; ++x) {
 			const xx = x * 2, yy = y * 2
@@ -307,41 +352,15 @@ function createGroundModel() {
 			)
 		}
 	}
+	groundSize = radius * 2 + 1
 	return vertices
 }
 
-function createGroundUv(l, uvCoords) {
-	const groundUvs = []
-	for (let i = 0; i < l; i += 4) {
-		const offset = (2 + ((i >> 2) % 2)) << 3,
-			left = uvCoords[offset],
-			top = uvCoords[offset + 1],
-			right = uvCoords[offset + 6],
-			bottom = uvCoords[offset + 7]
-		groundUvs.push(
-			// A--B
-			// | /
-			// |/
-			// C
-			left, top,
-			right, top,
-			left, bottom,
-			//    E
-			//   /|
-			//  / |
-			// D--F
-			left, bottom,
-			right, top,
-			right, bottom,
-		)
-	}
-	return groundUvs
-}
-
-function createBuffer(data) {
+function createBuffer(data, usage) {
 	const id = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, id)
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data),
+		usage || gl.STATIC_DRAW)
 	return id
 }
 
@@ -364,11 +383,23 @@ function init(atlas) {
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
+	// Create dummy map.
+	for (let i = 0, l = map.length; i < l; ++i) {
+		const y = Math.floor(i / 1024),
+			x = i % 1024,
+			dx = Math.abs(512 - x),
+			dy = Math.abs(512 - y),
+			t = dx > dy
+		map[i] = dx + dy == 0 ? 9 : 2 + t
+	}
+
 	const atlasTexture = createTexture(atlas.canvas),
 		groundVertices = createGroundModel()
+	atlasCoords = atlas.coords
 	groundLength = groundVertices.length / 3
 	groundModelBuffer = createBuffer(groundVertices)
-	groundUvBuffer = createBuffer(createGroundUv(groundLength, atlas.coords))
+	groundUvBuffer = gl.createBuffer()
+	groundUvs = new Float32Array(groundLength * 2)
 
 	spriteModelBuffer = createBuffer([
 		// A--C
