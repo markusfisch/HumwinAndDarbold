@@ -16,11 +16,24 @@ const horizon = 100,
 	cacheMat = new Float32Array(16),
 	map = new Uint8Array(1048576),
 	spriteSizes = [],
-	ssize = [],
+	screen = [],
 	pointerSpot = [0, 0, 0],
 	pointersX = [],
 	pointersY = [],
-	compareDist = (a, b) => b.dist - a.dist
+	compareDist = (a, b) => b.dist - a.dist,
+	objects = [
+		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
+			last: 0, frame: 0, update: updatePlayer},
+		{sprite: 0, x: 0, y: 0, z: -2, t: 0, update: function() {
+			this.t += .01
+			this.x = Math.sin(this.t) * 3
+		}},
+		{sprite: 0, x: 4, y: 0, z: 4},
+		{sprite: 1, x: 3.5, y: 0, z: 3.5},
+		{sprite: 4, x: -2, y: 0, z: 2},
+		{sprite: 4, x: 4, y: 0, z: 3},
+	],
+	player = objects[0]
 
 let gl,
 	spriteModelBuffer,
@@ -43,82 +56,59 @@ let gl,
 	pointers,
 	now
 
-function drawSprite(n, x, y, z) {
-	spriteMat[12] = x
-	spriteMat[13] = y
-	spriteMat[14] = z
-	const size = spriteSizes[n]
-	scale(cacheMat, spriteMat, size[0], size[1], 1)
-	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
-	multiply(modelViewMat, viewMat, cacheMat)
-	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-}
-
 function moveToTarget(e, tx, tz, step) {
 	const dx = tx - e.x,
 		dz = tz - e.z,
 		d = dx*dx + dz*dz
-	if (d == 0) return 0
+	if (d == 0) {
+		return 0
+	}
 	if (d < step * step) {
 		e.x = tx
 		e.z = tz
 		return 1
-	} else {
-		const f = step / Math.sqrt(d)
-		e.x += dx * f
-		e.z += dz * f
 	}
+	const f = step / Math.sqrt(d)
+	e.x += dx * f
+	e.z += dz * f
 	return 0
 }
 
-const objects = [
-	{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
-	last: 0, frame: 0,
-	update: function() {
-		if (moveToTarget(this, this.tx, this.tz, .07) && pointers > 0) {
-			moveToPointer()
-		}
-		if (now - this.last > 200) {
-			++this.frame
-			this.last = now
-		}
-		// To check whether (tx, tz) is left or right (on the screen)
-		// from the camera/player vector (x - camX, z - camZ), we can
-		// use the perpendicular vector (z - camZ, camX - x) which is
-		// always pointing in the same relative direction. Calculating
-		// the dot product with the vector (tx - x, tz - z) tells us
-		// if it has the same general direction (> 0).
-		const dot =
-			(this.z - camZ) * (this.tx - this.x) +
-			(camX - this.x) * (this.tz - this.z)
-		if (dot < 0) {
-			this.sprite = 7 + this.frame % 2
-		} else if (dot > 0) {
-			this.sprite = 5 + this.frame % 2
-		} else {
-			this.sprite = 0
-		}
-		// Make camera follow with a slight delay.
-		const dx = lookX - this.x,
-			dz = lookZ - this.z,
-			d = dx*dx + dz*dz
-		if (d > 0) {
-			const dd = Math.sqrt(d) - 2
-			moveToTarget(this.c, this.tx, this.tz, dd > .01 ? dd : .05)
-			lookAt(this.c.x, this.c.z)
-		}
-	}},
-	{sprite: 0, x: 0, y: 0, z: -2, t: 0, update: function() {
-		this.t += .01
-		this.x = Math.sin(this.t) * 3
-	}},
-	{sprite: 0, x: 4, y: 0, z: 4, update: function() {}},
-	{sprite: 1, x: 3.5, y: 0, z: 3.5, update: function() {}},
-	{sprite: 4, x: -2, y: 0, z: 2, update: function() {}},
-	{sprite: 4, x: 4, y: 0, z: 3, update: function() {}},
-],
-	player = objects[0]
+function updatePlayer() {
+	if (moveToTarget(this, this.tx, this.tz, .07) && pointers > 0) {
+		moveToPointer()
+	}
+	if (now - this.last > 200) {
+		++this.frame
+		this.last = now
+	}
+	// To check whether (tx, tz) is left or right (on the screen)
+	// from the camera/player vector (x - camX, z - camZ), we can
+	// use the perpendicular vector (z - camZ, camX - x) which is
+	// always pointing in the same relative direction. Calculating
+	// the dot product with the vector (tx - x, tz - z) tells us
+	// if it has the same general direction (> 0).
+	const dot =
+		(this.z - camZ) * (this.tx - this.x) +
+		(camX - this.x) * (this.tz - this.z)
+	if (dot < 0) {
+		this.sprite = 7 + this.frame % 2
+	} else if (dot > 0) {
+		this.sprite = 5 + this.frame % 2
+	} else {
+		this.sprite = 0
+	}
+	// Make camera follow with a slight delay.
+	const dx = lookX - this.x,
+		dz = lookZ - this.z,
+		d = dx*dx + dz*dz
+	if (d > 0) {
+		const dd = Math.sqrt(d) - 2
+		moveToTarget(this.c, this.tx, this.tz, dd > .01 ? dd : .06)
+		lookAt(this.c.x, this.c.z)
+	}
+}
+
 function run() {
 	requestAnimationFrame(run)
 	now = Date.now()
@@ -148,7 +138,9 @@ function run() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
 
 	objects.forEach(o => {
-		o.update()
+		if (o.update) {
+			o.update()
+		}
 		// Less operations to calculate the distance from the view plane
 		// than it is to multiply the matrices.
 		// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_plane
@@ -162,7 +154,15 @@ function run() {
 		o.dist = x*x + y*y + z*z
 	})
 	objects.sort(compareDist).forEach(o => {
-		drawSprite(o.sprite, o.x, o.y, o.z)
+		const n = o.sprite, size = spriteSizes[n]
+		scale(cacheMat, spriteMat, size[0], size[1], 1)
+		cacheMat[12] = o.x
+		cacheMat[13] = o.y
+		cacheMat[14] = o.z
+		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
+		multiply(modelViewMat, viewMat, cacheMat)
+		gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 	})
 }
 
@@ -222,8 +222,8 @@ function setPointer(event, down) {
 
 	// Map to WebGL coordinates.
 	for (let i = pointers; i--;) {
-		pointersX[i] = (2 * pointersX[i]) / ssize[0] - 1
-		pointersY[i] = 1 - (2 * pointersY[i]) / ssize[1]
+		pointersX[i] = (2 * pointersX[i]) / screen[0] - 1
+		pointersY[i] = 1 - (2 * pointersY[i]) / screen[1]
 	}
 
 	event.stopPropagation()
@@ -273,10 +273,10 @@ function lookAt(x, z) {
 }
 
 function resize() {
-	gl.canvas.width = ssize[0] = gl.canvas.clientWidth
-	gl.canvas.height = ssize[1] = gl.canvas.clientHeight
-	gl.viewport(0, 0, ssize[0], ssize[1])
-	setPerspective(projMat, Math.PI * .125, ssize[0] / ssize[1], .1, horizon)
+	gl.canvas.width = screen[0] = gl.canvas.clientWidth
+	gl.canvas.height = screen[1] = gl.canvas.clientHeight
+	gl.viewport(0, 0, screen[0], screen[1])
+	setPerspective(projMat, Math.PI * .125, screen[0] / screen[1], .1, horizon)
 	gl.uniformMatrix4fv(projMatLoc, gl.FALSE, projMat)
 }
 
@@ -528,8 +528,8 @@ function createAtlas() {
 		tileSize = 128,
 		scale = tileSize / svgSize,
 		border = 1,
-		normalizedAtlasSize = 1 / atlasSize,
-		pad = (border + 2) * normalizedAtlasSize,
+		uvPixel = 1 / atlasSize,
+		pad = (border + 2) * uvPixel,
 		nodes = {rc: {l: 0, t: 0, r: atlasSize, b: atlasSize}},
 		coords = [],
 		sprites = document.getElementsByTagName('g'),
@@ -549,10 +549,10 @@ function createAtlas() {
 			return
 		}
 		const rc = node.rc,
-			l = rc.l * normalizedAtlasSize,
-			t = rc.t * normalizedAtlasSize,
-			r = l + dw * normalizedAtlasSize,
-			b = t + dh * normalizedAtlasSize
+			l = rc.l * uvPixel,
+			t = rc.t * uvPixel,
+			r = l + dw * uvPixel,
+			b = t + dh * uvPixel
 		// A--C
 		// | /|
 		// |/ |
