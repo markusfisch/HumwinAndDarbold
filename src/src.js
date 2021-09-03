@@ -14,7 +14,11 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
-	map = new Uint8Array(1048576),
+	mapSize = 1024,
+	mapRadius = mapSize >> 1,
+	map = new Uint8Array(mapSize * mapSize),
+	groundSize = 35,
+	groundRadius = groundSize >> 1,
 	spriteSizes = [],
 	screen = [],
 	pointerSpot = [0, 0, 0],
@@ -42,7 +46,6 @@ let gl,
 	groundUvBuffer,
 	groundUvs,
 	groundLength,
-	groundSize,
 	atlasCoords,
 	vertexLoc,
 	uvLoc,
@@ -63,15 +66,27 @@ function moveToTarget(e, tx, tz, step) {
 	if (d == 0) {
 		return 0
 	}
+	let x = e.x, z = e.z, r = 0
 	if (d < step * step) {
-		e.x = tx
-		e.z = tz
-		return 1
+		x = tx
+		z = tz
+		r = 1
+	} else {
+		const f = step / Math.sqrt(d)
+		x += dx * f
+		z += dz * f
+		r = 0
 	}
-	const f = step / Math.sqrt(d)
-	e.x += dx * f
-	e.z += dz * f
-	return 0
+	if (map[(mapRadius + Math.round(z / 2)) * mapSize +
+			(mapRadius + Math.round(x / 2))] & 128) {
+		e.tx = e.x
+		e.tz = e.z
+		r = 0
+	} else {
+		e.x = x
+		e.z = z
+	}
+	return r
 }
 
 function updatePlayer() {
@@ -299,11 +314,12 @@ function createProgram(vs, fs) {
 }
 
 function updateGroundUvs(x, z) {
-	const skip = 1024 - groundSize, half = groundSize >> 1
-	for (let t = 0, o = (512 + z - half) * 1024 + (512 + x - half), i = 0;
+	const skip = mapSize - groundSize
+	for (let t = 0, o = (mapRadius + z - groundRadius) * mapSize +
+			(mapRadius + x - groundRadius), i = 0;
 			t < groundSize; ++t, o += skip) {
 		for (let s = 0; s < groundSize; ++s, ++o) {
-			const offset = map[o] << 3,
+			const offset = (map[o] & 127) << 3,
 				left = atlasCoords[offset],
 				top = atlasCoords[offset + 1],
 				right = atlasCoords[offset + 6],
@@ -333,9 +349,9 @@ function updateGroundUvs(x, z) {
 }
 
 function createGroundModel() {
-	const vertices = [], radius = 17
-	for (let y = -radius; y <= radius; ++y) {
-		for (let x = -radius; x <= radius; ++x) {
+	const vertices = []
+	for (let y = -groundRadius; y <= groundRadius; ++y) {
+		for (let x = -groundRadius; x <= groundRadius; ++x) {
 			const xx = x * 2, yy = y * 2
 			vertices.push(
 				// A--B
@@ -355,7 +371,6 @@ function createGroundModel() {
 			)
 		}
 	}
-	groundSize = radius * 2 + 1
 	return vertices
 }
 
@@ -387,13 +402,15 @@ function init(atlas) {
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
 	// Create dummy map.
+	const border = mapRadius - groundRadius
 	for (let i = 0, l = map.length; i < l; ++i) {
-		const y = Math.floor(i / 1024),
-			x = i % 1024,
-			dx = Math.abs(512 - x),
-			dy = Math.abs(512 - y),
+		const y = Math.floor(i / mapSize),
+			x = i % mapSize,
+			dx = Math.abs(mapRadius - x),
+			dy = Math.abs(mapRadius - y),
 			t = dx > dy
-		map[i] = dx + dy == 0 ? 9 : 2 + t
+		map[i] = (dx > border || dy > border) ? (10 | 128) :
+			(dx + dy == 0 ? 9 : 2 + t)
 	}
 
 	const atlasTexture = createTexture(atlas.canvas),
