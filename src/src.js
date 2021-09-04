@@ -62,21 +62,10 @@ let gl,
 function moveToTarget(e, tx, tz, step) {
 	const dx = tx - e.x,
 		dz = tz - e.z,
-		d = dx*dx + dz*dz
-	if (d == 0) {
-		return 0
-	}
-	let x = e.x, z = e.z, r = 0
-	if (d < step * step) {
-		x = tx
-		z = tz
-		r = 1
-	} else {
-		const f = step / Math.sqrt(d)
-		x += dx * f
-		z += dz * f
-		r = 0
-	}
+		d = Math.sqrt(dx*dx + dz*dz),
+		f = Math.min(1, step / d),
+		x = e.x + dx * f,
+		z = e.z + dz * f
 	if (map[(mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
@@ -85,7 +74,7 @@ function moveToTarget(e, tx, tz, step) {
 	}
 	e.x = x
 	e.z = z
-	return r
+	return f == 1
 }
 
 function updatePlayer() {
