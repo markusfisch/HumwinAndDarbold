@@ -381,8 +381,6 @@ function createTexture(image) {
 
 function init(atlas) {
 	gl = document.getElementById('Canvas').getContext('webgl')
-	gl.enable(gl.DEPTH_TEST)
-	gl.enable(gl.CULL_FACE)
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
