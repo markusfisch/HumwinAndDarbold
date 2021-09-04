@@ -81,11 +81,10 @@ function moveToTarget(e, tx, tz, step) {
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
 		e.tz = e.z
-		r = 0
-	} else {
-		e.x = x
-		e.z = z
+		return 0
 	}
+	e.x = x
+	e.z = z
 	return r
 }
 
