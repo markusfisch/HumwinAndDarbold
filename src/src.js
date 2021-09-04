@@ -232,11 +232,11 @@ function setPointer(event, down) {
 }
 
 function pointerCancel(event) {
-	setPointer(event, false)
+	setPointer(event, 0)
 }
 
 function pointerUp(event) {
-	setPointer(event, false)
+	setPointer(event, 0)
 }
 
 function pointerMove(event) {
@@ -247,7 +247,7 @@ function pointerMove(event) {
 }
 
 function pointerDown(event) {
-	setPointer(event, true)
+	setPointer(event, 1)
 	moveToPointer()
 }
 
@@ -384,7 +384,7 @@ function init(atlas) {
 	gl.enable(gl.DEPTH_TEST)
 	gl.enable(gl.CULL_FACE)
 	gl.enable(gl.BLEND)
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
