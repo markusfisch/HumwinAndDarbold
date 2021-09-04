@@ -70,15 +70,14 @@ function moveToTarget(e, tx, tz, step) {
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
 		e.tz = e.z
-		return 0
 	}
 	e.x = x
 	e.z = z
-	return f == 1
 }
 
 function updatePlayer() {
-	if (moveToTarget(this, this.tx, this.tz, .07) && pointers > 0) {
+	moveToTarget(this, this.tx, this.tz, .07)
+	if (pointers > 0) {
 		moveToPointer()
 	}
 	if (now - this.last > 200) {
