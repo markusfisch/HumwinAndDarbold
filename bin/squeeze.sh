@@ -29,8 +29,7 @@ s/ {/{/g;
 s/, /,/g;
 s/: /:/g;
 s/; /;/g;
-s/;"/"/g;'
-done | sed '
+s/;"/"/g;
 s/><\/circle>/\/>/g;
 s/><\/ellipse>/\/>/g;
 s/><\/line>/\/>/g;
@@ -38,3 +37,4 @@ s/><\/path>/\/>/g;
 s/><\/polygon>/\/>/g;
 s/><\/polyline>/\/>/g;
 s/><\/rect>/\/>/g'
+done
