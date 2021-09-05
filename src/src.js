@@ -536,10 +536,11 @@ function createAtlas() {
 		coords = [],
 		sprites = document.getElementsByTagName('g'),
 		canvas = document.createElement('canvas'),
-		ctx = canvas.getContext('2d')
+		ctx = canvas.getContext('2d'),
+		len = sprites.length
 	canvas.width = canvas.height = atlasSize
-	canvas.pending = sprites.length
-	for (let i = 0, l = canvas.pending; i < l; ++i) {
+	canvas.pending = len
+	for (let i = 0; i < len; ++i) {
 		const e = sprites[i],
 			size = e.textContent.trim().split('x'),
 			sw = size[0] || svgSize,
