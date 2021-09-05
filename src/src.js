@@ -68,18 +68,20 @@ function moveToTarget(e, tx, tz, step) {
 		z = e.z + dz * f
 	if (map[(mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))] & 128) {
-		e.tx = e.x
-		e.tz = e.z
-		return
+		return 1
 	}
 	e.x = x
 	e.z = z
+	return 0
 }
 
 function updatePlayer() {
-	moveToTarget(this, this.tx, this.tz, .09)
 	if (pointers > 0) {
 		moveToPointer()
+	}
+	if (moveToTarget(this, this.tx, this.tz, .09)) {
+		this.tx = this.x
+		this.tz = this.z
 	}
 	if (now - this.last > 200) {
 		++this.frame
@@ -242,14 +244,10 @@ function pointerUp(event) {
 
 function pointerMove(event) {
 	setPointer(event, pointers)
-	if (pointers > 0) {
-		moveToPointer()
-	}
 }
 
 function pointerDown(event) {
 	setPointer(event, 1)
-	moveToPointer()
 }
 
 function lookAt(x, z) {
