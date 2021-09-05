@@ -39,7 +39,8 @@ const horizon = 100,
 	],
 	player = objects[0]
 
-let gl,
+let seed = 1,
+	gl,
 	spriteModelBuffer,
 	spriteUvBuffer,
 	groundModelBuffer,
@@ -378,14 +379,7 @@ function createTexture(image) {
 	return id
 }
 
-function init(atlas) {
-	gl = document.getElementById('Canvas').getContext('webgl')
-	gl.enable(gl.BLEND)
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
-	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
-
-	// Create dummy map.
+function createMap() {
 	const border = mapRadius - groundRadius
 	for (let i = 0, l = map.length; i < l; ++i) {
 		const y = Math.floor(i / mapSize),
@@ -396,6 +390,31 @@ function init(atlas) {
 		map[i] = (dx > border || dy > border) ? (10 | 128) :
 			(dx + dy == 0 ? 9 : 2 + t)
 	}
+	let x = mapRadius,
+		y = mapRadius - 4,
+		o = y * mapSize + x
+	o += mapSize - 1
+	map[o++] = 11 | 128
+	map[o++] = 12 | 128
+	map[o++] = 13 | 128
+	o -= mapSize + 3
+	map[o++] = 18 | 128
+	map[o++] = 19 | 128
+	map[o++] = 14 | 128
+	o -= mapSize + 3
+	map[o++] = 17 | 128
+	map[o++] = 16 | 128
+	map[o++] = 15 | 128
+}
+
+function init(atlas) {
+	createMap()
+
+	gl = document.getElementById('Canvas').getContext('webgl')
+	gl.enable(gl.BLEND)
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
+	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
 	const atlasTexture = createTexture(atlas.canvas),
 		groundVertices = createGroundModel()
@@ -546,7 +565,7 @@ function atlasInsert(node, w, h) {
 	return node
 }
 
-function createAtlas() {
+function createAtlas(sources) {
 	const atlasSize = 1024,
 		svgSize = 100,
 		tileSize = 128,
@@ -556,15 +575,15 @@ function createAtlas() {
 		pad = (border + 2) * uvPixel,
 		nodes = {rc: {l: 0, t: 0, r: atlasSize, b: atlasSize}},
 		coords = [],
-		sprites = document.getElementsByTagName('g'),
 		canvas = document.createElement('canvas'),
 		ctx = canvas.getContext('2d'),
-		len = sprites.length
+		len = sources.length
 	canvas.width = canvas.height = atlasSize
 	canvas.pending = len
 	for (let i = 0; i < len; ++i) {
-		const e = sprites[i],
-			size = e.textContent.trim().split('x'),
+		const src = sources[i],
+			fm = (src.split('<')[0].trim() + ';').split(';'),
+			size = fm[0].split('x'),
 			sw = size[0] || svgSize,
 			sh = size[1] || svgSize,
 			dw = sw * scale | 0,
@@ -589,8 +608,21 @@ function createAtlas() {
 			r - pad, b - pad,
 		)
 		spriteSizes.push([dw / tileSize, dh / tileSize])
-		node.img = svgToImg(e.innerHTML, sw, sh, dw, dh).onload = function() {
-			ctx.drawImage(this, node.rc.l + border, node.rc.t + border)
+		node.img = svgToImg(src, sw, sh, dw, dh).onload = function() {
+			const angle = fm[1] * Math.PI / 180,
+				x = node.rc.l + border,
+				y = node.rc.t + border,
+				w2 = dw >> 1,
+				h2 = dh >> 1
+			if (angle > 0) {
+				ctx.save()
+				ctx.translate(x + w2, y + h2)
+				ctx.rotate(angle)
+				ctx.drawImage(this, -w2, -h2)
+				ctx.restore()
+			} else {
+				ctx.drawImage(this, x, y)
+			}
 			--canvas.pending
 		}
 	}
@@ -610,8 +642,35 @@ function waitForAtlas(atlas) {
 	}
 }
 
+function random() {
+	// From: http://indiegamr.com/generate-repeatable-random-numbers-in-js/
+	return (seed = (seed * 9301 + 49297) % 233280) / 233280
+}
+
+function createTiles(sources) {
+	for (let a = 0; a < 360; a += 90) {
+		sources.push(`;${a}
+<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect>
+<path style="fill:#008" d="M100 10 L100 100 L10 100 C10 ${
+	50 + Math.round(random() * 60 - 30)} ${
+	50 + Math.round(random() * 60 - 30)} 10 100 10Z"></path>`)
+		sources.push(`;${a}
+<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect>
+<path style="fill:#008" d="M100 100 L0 100 L0 10 L10 10 C35 ${
+	10 + Math.round(random() * 10 - 5)} 65 ${
+	10 + Math.round(random() * 10 - 5)} 90 10 L100 10 L100 100Z"></path>`)
+	}
+	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
+}
+
 window.onload = function() {
-	waitForAtlas(createAtlas())
+	const sources = [],
+		gs = document.getElementsByTagName('g')
+	for (let i = 0, l = gs.length; i < l; ++i) {
+		sources.push(gs[i].innerHTML)
+	}
+	createTiles(sources)
+	waitForAtlas(createAtlas(sources))
 }
 
 // Matrix functions below from: https://github.com/toji/gl-matrix
