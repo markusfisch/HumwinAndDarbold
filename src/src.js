@@ -70,6 +70,7 @@ function moveToTarget(e, tx, tz, step) {
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
 		e.tz = e.z
+		return
 	}
 	e.x = x
 	e.z = z
