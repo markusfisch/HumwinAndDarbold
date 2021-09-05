@@ -76,7 +76,7 @@ function moveToTarget(e, tx, tz, step) {
 }
 
 function updatePlayer() {
-	moveToTarget(this, this.tx, this.tz, .07)
+	moveToTarget(this, this.tx, this.tz, .09)
 	if (pointers > 0) {
 		moveToPointer()
 	}
