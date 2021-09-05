@@ -478,41 +478,61 @@ function svgToImg(svg, sw, sh, dw, dh) {
 // http://www.blackpawn.com/texts/lightmaps/default.html
 function atlasInsert(node, w, h) {
 	if (node.l) {
+		// Try to insert image into left and then into right node.
 		return atlasInsert(node.l, w, h) || atlasInsert(node.r, w, h)
 	}
 	if (node.img) {
+		// Node already has an image.
 		return
 	}
 	const rc = node.rc,
 		rw = rc.r - rc.l,
 		rh = rc.b - rc.t
 	if (rw < w || rh < h) {
+		// Node is too small.
 		return
 	}
 	if (rw == w && rh == h) {
+		// Node fits exactly.
 		return node
 	}
+	// Put image into node and split the remaining space into two
+	// new nodes.
 	node.l = {}
 	node.r = {}
 	if (rw - w > rh - h) {
+		// +-------+---+
+		// | image |   |
+		// +-------+   |
+		// |       | l |
+		// |   r   |   |
+		// |       |   |
+		// +-------+---+
 		node.l.rc = {
-			l: rc.l,
-			t: rc.t,
-			r: rc.l + w - 1,
-			b: rc.b,
-		}
-		node.r.rc = {
 			l: rc.l + w,
 			t: rc.t,
 			r: rc.r,
+			b: rc.b
+		}
+		node.r.rc = {
+			l: rc.l,
+			t: rc.t + h,
+			r: rc.l + w,
 			b: rc.b,
 		}
 	} else {
+		// +-------+---+
+		// | image | l |
+		// +-------+---+
+		// |           |
+		// |     r     |
+		// |           |
+		// +-----------+
 		node.l.rc = {
-			l: rc.l,
+			l: rc.l + w,
 			t: rc.t,
 			r: rc.r,
-			b: rc.t + h - 1,
+			b: rc.t + h,
 		}
 		node.r.rc = {
 			l: rc.l,
@@ -521,7 +541,10 @@ function atlasInsert(node, w, h) {
 			b: rc.b,
 		}
 	}
-	return node.l
+	// Fit rectangle to image.
+	node.rc.r = rc.l + w - 1
+	node.rc.b = rc.t + h - 1
+	return node
 }
 
 function createAtlas() {
