@@ -177,7 +177,7 @@ function rayGround(out, lx, ly, lz, dx, dy, dz) {
 		out[2] = lz + dz*t
 		return t >= 0
 	}
-	return false
+	return 0
 }
 
 function getGroundSpot(out, nx, ny) {
@@ -454,13 +454,13 @@ function init(atlas) {
 		// Prevent pinch/zoom on iOS 11.
 		document.addEventListener('gesturestart', function(event) {
 			event.preventDefault()
-		}, false)
+		}, 0)
 		document.addEventListener('gesturechange', function(event) {
 			event.preventDefault()
-		}, false)
+		}, 0)
 		document.addEventListener('gestureend', function(event) {
 			event.preventDefault()
-		}, false)
+		}, 0)
 	}
 
 	run()
