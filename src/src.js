@@ -649,16 +649,12 @@ function random() {
 
 function createTiles(sources) {
 	for (let a = 0; a < 360; a += 90) {
-		sources.push(`;${a}
-<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect>
-<path style="fill:#008" d="M100 10 L100 100 L10 100 C10 ${
-	50 + Math.round(random() * 60 - 30)} ${
-	50 + Math.round(random() * 60 - 30)} 10 100 10Z"></path>`)
-		sources.push(`;${a}
-<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect>
-<path style="fill:#008" d="M100 100 L0 100 L0 10 L10 10 C35 ${
-	10 + Math.round(random() * 10 - 5)} 65 ${
-	10 + Math.round(random() * 10 - 5)} 90 10 L100 10 L100 100Z"></path>`)
+		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 10 L100 100 L10 100 C10 ${
+			50 + Math.round(random() * 60 - 30)} ${
+			50 + Math.round(random() * 60 - 30)} 10 100 10Z"></path>`)
+		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 100 L0 100 L0 10 L10 10 C35 ${
+			10 + Math.round(random() * 10 - 5)} 65 ${
+			10 + Math.round(random() * 10 - 5)} 90 10 L100 10 L100 100Z"></path>`)
 	}
 	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
 }
