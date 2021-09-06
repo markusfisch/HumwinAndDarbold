@@ -101,20 +101,10 @@ function moveToTarget(e, tx, tz, step) {
 }
 
 function pickSprite(e, idle, frames) {
-	if (now - e.last > 200) {
-		++e.frame
-		e.last = now
-	}
 	e.sprite = idle + e.frame % frames
 }
 
 function pickDirSprite(e, idle, frames, tx, tz) {
-	// This could be merged with pickSprite() but doubling this code is
-	// compressing better.
-	if (now - e.last > 200) {
-		++e.frame
-		e.last = now
-	}
 	// To check whether (tx, tz) is left or right (on the screen)
 	// from the camera/player vector (x - camX, z - camZ), we can
 	// use the perpendicular vector (z - camZ, camX - x) which is
@@ -224,6 +214,10 @@ function run() {
 
 	objects.forEach(o => {
 		if (o.update) {
+			if (now - o.last > 200) {
+				++o.frame
+				o.last = now
+			}
 			o.update()
 		}
 		// Less operations to calculate the distance from the view plane
