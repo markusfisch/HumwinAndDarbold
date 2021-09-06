@@ -494,14 +494,16 @@ function init(atlas) {
 
 	// Add fauna objects.
 	const innerRadius = (mapRadius - groundRadius) * 2
-	for (let i = 300; i--;) {
-		objects.push({
-			sprite: 10,
-			x: -innerRadius + (random() * (innerRadius * 2)) | 0,
-			y: 0,
-			z: -innerRadius + (random() * (innerRadius * 2)) | 0
-		})
+	for (let i = 300; i > 0;) {
+		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
+			z = -innerRadius + (random() * (innerRadius * 2)) | 0
+		if (!(map[(mapRadius + Math.round(z / 2)) * mapSize +
+				(mapRadius + Math.round(x / 2))] & 128)) {
+			objects.push({sprite: 10, x: x, y: 0, z: z})
+			--i
+		}
 	}
+
 	objects.forEach(o => {
 		// Pre-scale matrices so we don't need to do this for every frame.
 		o.mat = new Float32Array(idMat)
