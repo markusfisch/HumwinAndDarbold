@@ -25,8 +25,9 @@ const horizon = 100,
 	pointersX = [],
 	pointersY = [],
 	compareDist = (a, b) => b.dist - a.dist,
+	camera = {x: 0, z: 0},
 	objects = [
-		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
+		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
 			last: 0, frame: 0, update: updatePlayer},
 		{sprite: 0, x: 4, y: 0, z: 4},
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
@@ -81,7 +82,7 @@ function moveToTarget(e, tx, tz, step) {
 		f = Math.min(1, step / d),
 		x = e.x + dx * f,
 		z = e.z + dz * f
-	if (map[(mapRadius + Math.round(z / 2)) * mapSize +
+	if (e != camera && map[(mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
 		e.tz = e.z
@@ -127,8 +128,8 @@ function updatePlayer() {
 		d = dx*dx + dz*dz
 	if (d > 0) {
 		const dd = Math.sqrt(d) - 2
-		moveToTarget(this.c, this.tx, this.tz, dd > .01 ? dd : .06)
-		lookAt(this.c.x, this.c.z)
+		moveToTarget(camera, this.tx, this.tz, dd > .01 ? dd : .06)
+		lookAt(camera.x, camera.z)
 	}
 }
 
