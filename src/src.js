@@ -151,19 +151,29 @@ function updatePlayer() {
 	}
 }
 
+function die() {
+	pickSprite(this, 1, 2)
+}
+
 function updatePredator() {
 	const dx = player.x - this.x,
 		dz = player.z - this.z,
 		d = dx*dx + dz*dz
-	if (d < 1) {
+	if (d < .7) {
 		pickSprite(this, 8, 2)
-		if (player.update) {
-			player.update = null
+		if (player.update != die) {
+			player.update = die
 			player.killed = now
-			say('Ouch')
+			say('Ouch!')
 		}
 		if (now - player.killed > 500) {
-			player.x = -100000
+			player.x = 100000
+			player.update = null
+			setTimeout(function() {
+				say('You got printed anew.')
+				player.x = player.z = player.tx = player.tz = 0
+				player.update = updatePlayer
+			}, 2000)
 		}
 		return
 	} else if (d < 16 && this.ignore < 1) {
