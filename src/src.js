@@ -31,7 +31,7 @@ const horizon = 100,
 			last: 0, frame: 0, update: updatePlayer},
 		{sprite: 0, x: 4, y: 0, z: 4},
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
-		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
+		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4, lx: 0, lz: 0, stuck: 0,
 				last: 0, frame: 0, update: function() {
 			const dx = player.x - this.x,
 				dz = player.z - this.z,
@@ -44,10 +44,19 @@ const horizon = 100,
 				pickSprite(this, 5, 2, player.x, player.z)
 			} else {
 				if (moveToTarget(this, this.tx, this.tz, .07)) {
-					this.tx = -this.tx
+					this.tx = this.tx > 0 ? -5 : 5
+					this.tz = -4
 				}
 				pickSprite(this, 5, 2, this.tx, this.tz)
 			}
+			if (this.x == this.lx && this.z == this.lz &&
+					++this.stuck > 3) {
+				this.tx = this.x + random() * 4 - 2
+				this.tz = this.z + random() * 4 - 2
+				this.stuck = 0
+			}
+			this.lx = this.x
+			this.lz = this.z
 		}},
 		{sprite: 10, x: -2, y: 0, z: 2},
 		{sprite: 10, x: 4, y: 0, z: 3},
