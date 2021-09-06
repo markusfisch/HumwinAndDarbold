@@ -28,21 +28,24 @@ const horizon = 100,
 	objects = [
 		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, c: {x: 0, z: 0},
 			last: 0, frame: 0, update: updatePlayer},
-		{sprite: 0, x: 0, y: 0, z: -2, t: 0, update: function() {
-			this.t += .01
-			this.x = Math.sin(this.t) * 3
-		}},
 		{sprite: 0, x: 4, y: 0, z: 4},
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
-		{sprite: 5, x: 5, y: 0, z: -4, last: 0, frame: 0, update: function() {
+		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
+				last: 0, frame: 0, update: function() {
 			const dx = player.x - this.x,
 				dz = player.z - this.z,
 				d = dx*dx + dz*dz
-			if (d < 16) {
+			if (d < 1) {
+				player.x = -1000
+				player.update = null
+			} else if (d < 16) {
 				moveToTarget(this, player.x, player.z, .07)
 				pickSprite(this, 5, 2, player.x, player.z)
 			} else {
-				this.sprite = 5
+				if (moveToTarget(this, this.tx, this.tz, .07)) {
+					this.tx = -this.tx
+				}
+				pickSprite(this, 5, 2, this.tx, this.tz)
 			}
 		}},
 		{sprite: 10, x: -2, y: 0, z: 2},
@@ -82,10 +85,11 @@ function moveToTarget(e, tx, tz, step) {
 			(mapRadius + Math.round(x / 2))] & 128) {
 		e.tx = e.x
 		e.tz = e.z
-		return
+		return 1
 	}
 	e.x = x
 	e.z = z
+	return f == 1
 }
 
 function pickSprite(e, idle, frames, tx, tz) {
