@@ -1,7 +1,6 @@
 'use strict'
 
 const horizon = 100,
-	skyColor = [0, .9, .5, 1],
 	camPos = [0, 16, 12],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
@@ -200,8 +199,6 @@ function updatePredator() {
 function run() {
 	requestAnimationFrame(run)
 	now = Date.now()
-
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	// Draw ground.
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
@@ -518,7 +515,6 @@ function init(atlas) {
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.clearColor(skyColor[0], skyColor[1], skyColor[2], skyColor[3])
 
 	const atlasTexture = createTexture(atlas.canvas),
 		groundVertices = createGroundModel()
