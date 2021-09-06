@@ -14,7 +14,7 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
-	mapSize = 1024,
+	mapSize = 128,
 	mapRadius = mapSize >> 1,
 	map = new Uint8Array(mapSize * mapSize),
 	groundSize = 35,
@@ -442,7 +442,7 @@ function createTexture(image) {
 
 function createMap() {
 	// Map mock-up for debugging.
-	const border = mapRadius - groundRadius,
+	const innerRadius = mapRadius - groundRadius,
 		impassableSprite = 22
 	for (let i = 0, l = map.length; i < l; ++i) {
 		const y = Math.floor(i / mapSize),
@@ -450,7 +450,8 @@ function createMap() {
 			dx = Math.abs(mapRadius - x),
 			dy = Math.abs(mapRadius - y),
 			t = dx > dy
-		map[i] = (dx > border || dy > border) ? (impassableSprite | 128) :
+		map[i] = dx > innerRadius || dy > innerRadius ?
+			(impassableSprite | 128) :
 			(dx + dy == 0 ? 13 : 11 + t)
 	}
 	let x = mapRadius,
@@ -471,8 +472,27 @@ function createMap() {
 }
 
 function init(atlas) {
+	lookAt(0, 0)
 	createMap()
 
+	// Add fauna objects.
+	const innerRadius = (mapRadius - groundRadius) * 2
+	for (let i = 300; i--;) {
+		objects.push({
+			sprite: 10,
+			x: -innerRadius + (random() * (innerRadius * 2)) | 0,
+			y: 0,
+			z: -innerRadius + (random() * (innerRadius * 2)) | 0
+		})
+	}
+	objects.forEach(o => {
+		// Pre-scale matrices so we don't need to do this for every frame.
+		o.mat = new Float32Array(idMat)
+		const size = spriteSizes[o.sprite]
+		scale(o.mat, spriteMat, size[0], size[1], 1)
+	})
+
+	// Init GL
 	gl = document.getElementById('Canvas').getContext('webgl')
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
@@ -518,14 +538,6 @@ function init(atlas) {
 
 	window.onresize = resize
 	resize()
-	lookAt(0, 0)
-
-	objects.forEach(o => {
-		// Pre-scale matrices so we don't need to do this for every frame.
-		o.mat = new Float32Array(idMat)
-		const size = spriteSizes[o.sprite]
-		scale(o.mat, spriteMat, size[0], size[1], 1)
-	})
 
 	document.onmousedown = pointerDown
 	document.onmousemove = pointerMove
