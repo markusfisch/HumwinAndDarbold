@@ -221,12 +221,24 @@ function run() {
 			z = camC*d
 		o.dist = x*x + y*y + z*z
 	})
+	let lx = 0, ly = 0, lz = 0
 	objects.sort(compareDist).forEach(o => {
+		const om = o.mat, ox = o.x, oy = o.y, oz = o.z
+		// Disable DEPTH_TEST for sprites that share the same position
+		// or one of these sprites will not be drawn because it is
+		// obscured by the other.
+		if (lx == ox && ly == oy && lz == oz) {
+			gl.disable(gl.DEPTH_TEST)
+		} else {
+			gl.enable(gl.DEPTH_TEST)
+		}
+		lx = ox
+		ly = oy
+		lz = oz
 		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, o.sprite << 5)
-		const om = o.mat
-		om[12] = o.x
-		om[13] = o.y
-		om[14] = o.z
+		om[12] = ox
+		om[13] = oy
+		om[14] = oz
 		multiply(modelViewMat, viewMat, om)
 		gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -494,6 +506,8 @@ function init(atlas) {
 
 	// Init GL
 	gl = document.getElementById('Canvas').getContext('webgl')
+	gl.enable(gl.DEPTH_TEST)
+	gl.enable(gl.CULL_FACE)
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
