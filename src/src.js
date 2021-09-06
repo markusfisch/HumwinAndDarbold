@@ -33,11 +33,20 @@ const horizon = 100,
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
 		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
-				last: 0, frame: 0,
+				last: 0, frame: 0, speed: .07,
 				update: updatePredator,
 				waypoint: function() {
 			this.tx = this.tx > 0 ? -5 : 5
 			this.tz = -4
+		}},
+		{sprite: 5, x: 0, y: 0, z: 10, tx: 0, tz: 10,
+				lx: 0, lz: 0, stuck: 0, ignore: 0,
+				last: 0, frame: 0, speed: .07, a: 0,
+				update: updatePredator,
+				waypoint: function() {
+			this.tx = Math.cos(this.a) * 3
+			this.tz = 10 + Math.sin(this.a) * 3
+			this.a += .5
 		}},
 		{sprite: 10, x: -2, y: 0, z: 2},
 		{sprite: 10, x: 4, y: 0, z: 3},
@@ -83,7 +92,17 @@ function moveToTarget(e, tx, tz, step) {
 	return f == 1
 }
 
-function pickSprite(e, idle, frames, tx, tz) {
+function pickSprite(e, idle, frames) {
+	if (now - e.last > 200) {
+		++e.frame
+		e.last = now
+	}
+	e.sprite = idle + e.frame % frames
+}
+
+function pickDirSprite(e, idle, frames, tx, tz) {
+	// This could be merged with pickSprite() but doubling this code is
+	// compressing better.
 	if (now - e.last > 200) {
 		++e.frame
 		e.last = now
@@ -96,7 +115,7 @@ function pickSprite(e, idle, frames, tx, tz) {
 	// if it has the same general direction (> 0).
 	const dir = (e.z - camZ)*(tx - e.x) + (camX - e.x)*(tz - e.z)
 	// This expression could be simplified so that it does not contain
-	// so many repetitions but this way the compression is better.
+	// all these repetitions but this is compressing better.
 	if (dir < 0) {
 		e.sprite = idle + 1 + e.frame % frames + frames
 	} else if (dir > 0) {
@@ -111,7 +130,7 @@ function updatePlayer() {
 		moveToPointer()
 	}
 	moveToTarget(this, this.tx, this.tz, .09)
-	pickSprite(this, 0, 2, this.tx, this.tz)
+	pickDirSprite(this, 0, 2, this.tx, this.tz)
 	// Make camera follow player with a slight delay.
 	const dx = lookX - this.x,
 		dz = lookZ - this.z,
@@ -128,16 +147,23 @@ function updatePredator() {
 		dz = player.z - this.z,
 		d = dx*dx + dz*dz
 	if (d < 1) {
-		player.x = -1000
-		player.update = null
+		pickSprite(this, 8, 2)
+		if (player.update) {
+			player.update = null
+			player.killed = now
+		}
+		if (now - player.killed > 500) {
+			player.x = -100000
+		}
+		return
 	} else if (d < 16 && this.ignore < 1) {
-		moveToTarget(this, player.x, player.z, .07)
-		pickSprite(this, 5, 2, player.x, player.z)
+		moveToTarget(this, player.x, player.z, this.speed)
+		pickDirSprite(this, 5, 2, player.x, player.z)
 	} else {
-		if (moveToTarget(this, this.tx, this.tz, .07)) {
+		if (moveToTarget(this, this.tx, this.tz, this.speed)) {
 			this.waypoint()
 		}
-		pickSprite(this, 5, 2, this.tx, this.tz)
+		pickDirSprite(this, 5, 2, this.tx, this.tz)
 		--this.ignore
 	}
 	if (this.x == this.lx && this.z == this.lz &&
