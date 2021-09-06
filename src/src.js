@@ -187,13 +187,12 @@ function run() {
 		o.dist = x*x + y*y + z*z
 	})
 	objects.sort(compareDist).forEach(o => {
-		const n = o.sprite, size = spriteSizes[n]
-		scale(cacheMat, spriteMat, size[0], size[1], 1)
-		cacheMat[12] = o.x
-		cacheMat[13] = o.y
-		cacheMat[14] = o.z
-		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, n << 5)
-		multiply(modelViewMat, viewMat, cacheMat)
+		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, o.sprite << 5)
+		const om = o.mat
+		om[12] = o.x
+		om[13] = o.y
+		om[14] = o.z
+		multiply(modelViewMat, viewMat, om)
 		gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 	})
@@ -485,6 +484,13 @@ function init(atlas) {
 	window.onresize = resize
 	resize()
 	lookAt(0, 0)
+
+	objects.forEach(o => {
+		// Pre-scale matrices so we don't need to do this for every frame.
+		o.mat = new Float32Array(idMat)
+		const size = spriteSizes[o.sprite]
+		scale(o.mat, spriteMat, size[0], size[1], 1)
+	})
 
 	document.onmousedown = pointerDown
 	document.onmousemove = pointerMove
