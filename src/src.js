@@ -54,6 +54,7 @@ const horizon = 100,
 	player = objects[0]
 
 let seed = 1,
+	message,
 	gl,
 	spriteModelBuffer,
 	spriteUvBuffer,
@@ -73,6 +74,14 @@ let seed = 1,
 	lookZ,
 	pointers,
 	now
+
+function say(what) {
+	message.style.display = 'block'
+	message.innerHTML = what
+	setTimeout(function() {
+		message.style.display = 'none'
+	}, 1000 + 200 * what.split(' ').length)
+}
 
 function moveToTarget(e, tx, tz, step) {
 	const dx = tx - e.x,
@@ -151,6 +160,7 @@ function updatePredator() {
 		if (player.update) {
 			player.update = null
 			player.killed = now
+			say('Ouch')
 		}
 		if (now - player.killed > 500) {
 			player.x = -100000
@@ -492,7 +502,8 @@ function init(atlas) {
 		scale(o.mat, spriteMat, size[0], size[1], 1)
 	})
 
-	// Init GL
+	message = document.getElementById('Message')
+
 	gl = document.getElementById('Canvas').getContext('webgl')
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
