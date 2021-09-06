@@ -33,9 +33,20 @@ const horizon = 100,
 			this.x = Math.sin(this.t) * 3
 		}},
 		{sprite: 0, x: 4, y: 0, z: 4},
-		{sprite: 1, x: 3.5, y: 0, z: 3.5},
-		{sprite: 4, x: -2, y: 0, z: 2},
-		{sprite: 4, x: 4, y: 0, z: 3},
+		{sprite: 5, x: 3.5, y: 0, z: 3.5},
+		{sprite: 5, x: 5, y: 0, z: -4, last: 0, frame: 0, update: function() {
+			const dx = player.x - this.x,
+				dz = player.z - this.z,
+				d = dx*dx + dz*dz
+			if (d < 16) {
+				moveToTarget(this, player.x, player.z, .07)
+				pickSprite(this, 5, 2, player.x, player.z)
+			} else {
+				this.sprite = 5
+			}
+		}},
+		{sprite: 10, x: -2, y: 0, z: 2},
+		{sprite: 10, x: 4, y: 0, z: 3},
 	],
 	player = objects[0]
 
@@ -69,24 +80,18 @@ function moveToTarget(e, tx, tz, step) {
 		z = e.z + dz * f
 	if (map[(mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))] & 128) {
-		return 1
+		e.tx = e.x
+		e.tz = e.z
+		return
 	}
 	e.x = x
 	e.z = z
-	return 0
 }
 
-function updatePlayer() {
-	if (pointers > 0) {
-		moveToPointer()
-	}
-	if (moveToTarget(this, this.tx, this.tz, .09)) {
-		this.tx = this.x
-		this.tz = this.z
-	}
-	if (now - this.last > 200) {
-		++this.frame
-		this.last = now
+function pickSprite(e, idle, frames, tx, tz) {
+	if (now - e.last > 200) {
+		++e.frame
+		e.last = now
 	}
 	// To check whether (tx, tz) is left or right (on the screen)
 	// from the camera/player vector (x - camX, z - camZ), we can
@@ -94,17 +99,25 @@ function updatePlayer() {
 	// always pointing in the same relative direction. Calculating
 	// the dot product with the vector (tx - x, tz - z) tells us
 	// if it has the same general direction (> 0).
-	const dot =
-		(this.z - camZ) * (this.tx - this.x) +
-		(camX - this.x) * (this.tz - this.z)
-	if (dot < 0) {
-		this.sprite = 7 + this.frame % 2
-	} else if (dot > 0) {
-		this.sprite = 5 + this.frame % 2
+	const dir = (e.z - camZ)*(tx - e.x) + (camX - e.x)*(tz - e.z)
+	// This expression could be simplified so that it does not contain
+	// so many repetitions but this way the compression is better.
+	if (dir < 0) {
+		e.sprite = idle + 1 + e.frame % frames + frames
+	} else if (dir > 0) {
+		e.sprite = idle + 1 + e.frame % frames
 	} else {
-		this.sprite = 0
+		e.sprite = idle
 	}
-	// Make camera follow with a slight delay.
+}
+
+function updatePlayer() {
+	if (pointers > 0) {
+		moveToPointer()
+	}
+	moveToTarget(this, this.tx, this.tz, .09)
+	pickSprite(this, 0, 2, this.tx, this.tz)
+	// Make camera follow player with a slight delay.
 	const dx = lookX - this.x,
 		dz = lookZ - this.z,
 		d = dx*dx + dz*dz
@@ -173,12 +186,12 @@ function run() {
 }
 
 function rayGround(out, lx, ly, lz, dx, dy, dz) {
-	const denom = -1*dy
+	const denom = -1 * dy
 	if (denom > .0001) {
-		const t = -1*-ly / denom
-		out[0] = lx + dx*t
-		out[1] = ly + dy*t
-		out[2] = lz + dz*t
+		const t = -1 * -ly / denom
+		out[0] = lx + dx * t
+		out[1] = ly + dy * t
+		out[2] = lz + dz * t
 		return t >= 0
 	}
 	return 0
@@ -380,31 +393,33 @@ function createTexture(image) {
 }
 
 function createMap() {
-	const border = mapRadius - groundRadius
+	// Map mock-up for debugging.
+	const border = mapRadius - groundRadius,
+		impassableSprite = 22
 	for (let i = 0, l = map.length; i < l; ++i) {
 		const y = Math.floor(i / mapSize),
 			x = i % mapSize,
 			dx = Math.abs(mapRadius - x),
 			dy = Math.abs(mapRadius - y),
 			t = dx > dy
-		map[i] = (dx > border || dy > border) ? (10 | 128) :
-			(dx + dy == 0 ? 9 : 2 + t)
+		map[i] = (dx > border || dy > border) ? (impassableSprite | 128) :
+			(dx + dy == 0 ? 13 : 11 + t)
 	}
 	let x = mapRadius,
 		y = mapRadius - 4,
 		o = y * mapSize + x
 	o += mapSize - 1
-	map[o++] = 11 | 128
-	map[o++] = 12 | 128
-	map[o++] = 13 | 128
-	o -= mapSize + 3
-	map[o++] = 18 | 128
-	map[o++] = 19 | 128
 	map[o++] = 14 | 128
-	o -= mapSize + 3
-	map[o++] = 17 | 128
-	map[o++] = 16 | 128
 	map[o++] = 15 | 128
+	map[o++] = 16 | 128
+	o -= mapSize + 3
+	map[o++] = 21 | 128
+	map[o++] = 22 | 128
+	map[o++] = 17 | 128
+	o -= mapSize + 3
+	map[o++] = 20 | 128
+	map[o++] = 19 | 128
+	map[o++] = 18 | 128
 }
 
 function init(atlas) {
@@ -649,9 +664,11 @@ function random() {
 
 function createTiles(sources) {
 	for (let a = 0; a < 360; a += 90) {
+		// Corner
 		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 10 L100 100 L10 100 C10 ${
 			50 + Math.round(random() * 60 - 30)} ${
 			50 + Math.round(random() * 60 - 30)} 10 100 10Z"></path>`)
+		// Side
 		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 100 L0 100 L0 10 L10 10 C35 ${
 			10 + Math.round(random() * 10 - 5)} 65 ${
 			10 + Math.round(random() * 10 - 5)} 90 10 L100 10 L100 100Z"></path>`)
