@@ -26,15 +26,32 @@ const horizon = 100,
 	compareDist = (a, b) => b.dist - a.dist,
 	camera = {x: 0, z: 0},
 	objects = [
-		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, dropAngle: 0,
-			last: 0, frame: 0, update: updatePlayer},
-		{sprite: 14, x: 5, y: 0, z: 2, icon: 'Fruit1'},
-		{sprite: 15, x: 3, y: 0, z: 1, icon: 'Fruit2'},
+		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
+			last: 0, frame: 0, update: updatePlayer,
+			getEaten: function() {
+				this.update = function() {
+					pickSprite(this, 1, 2)
+				}
+				items.length = 0
+				updateInventory()
+				say('Ouch!')
+			},
+			resurrect: function() {
+				this.update = null
+				setTimeout(function() {
+					say('You got printed anew.')
+					player.x = player.z = player.tx = player.tz = 0
+					player.update = updatePlayer
+				}, 2000)
+			}
+		},
+		{sprite: 14, x: 5, y: 0, z: 2, name: 'Fruit1', use: dropItem},
+		{sprite: 15, x: 3, y: 0, z: 1, name: 'Fruit2', use: dropItem},
 		{sprite: 0, x: 4, y: 0, z: 4},
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
 		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
-				last: 0, frame: 0, speed: .07,
+				last: 0, frame: 0, speed: .07, sight: 16,
 				update: updatePredator,
 				waypoint: function() {
 			this.tx = this.tx > 0 ? -5 : 5
@@ -42,7 +59,7 @@ const horizon = 100,
 		}},
 		{sprite: 5, x: 0, y: 0, z: 10, tx: 0, tz: 10,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
-				last: 0, frame: 0, speed: .07, a: 0,
+				last: 0, frame: 0, speed: .07, sight: 16, a: 0,
 				update: updatePredator,
 				waypoint: function() {
 			this.tx = Math.cos(this.a) * 3
@@ -75,7 +92,7 @@ let seed = 1,
 	lookX,
 	lookZ,
 	pointers,
-	fruits = [objects[1], objects[2]],
+	pickables = [objects[1], objects[2]],
 	items = [],
 	now
 
@@ -87,45 +104,55 @@ function say(what) {
 	}, 1000 + 200 * what.split(' ').length)
 }
 
-function moveToTarget(e, tx, tz, step) {
-	const dx = tx - e.x,
-		dz = tz - e.z,
+function moveToTarget(o, tx, tz, step) {
+	const dx = tx - o.x,
+		dz = tz - o.z,
 		d = Math.sqrt(dx*dx + dz*dz),
 		f = Math.min(1, step / d),
-		x = e.x + dx * f,
-		z = e.z + dz * f
-	if (e != camera && map[(mapRadius + Math.round(z / 2)) * mapSize +
+		x = o.x + dx * f,
+		z = o.z + dz * f
+	if (o != camera && map[(mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))] & 128) {
-		e.tx = e.x
-		e.tz = e.z
+		o.tx = o.x
+		o.tz = o.z
 		return 1
 	}
-	e.x = x
-	e.z = z
+	o.x = x
+	o.z = z
 	return f == 1
 }
 
-function pickSprite(e, idle, frames) {
-	e.sprite = idle + e.frame % frames
+function pickSprite(o, idle, frames) {
+	o.sprite = idle + o.frame % frames
 }
 
-function pickDirSprite(e, idle, frames, tx, tz) {
+function pickDirSprite(o, idle, frames, tx, tz) {
 	// To check whether (tx, tz) is left or right (on the screen)
 	// from the camera/player vector (x - camX, z - camZ), we can
 	// use the perpendicular vector (z - camZ, camX - x) which is
 	// always pointing in the same relative direction. Calculating
 	// the dot product with the vector (tx - x, tz - z) tells us
 	// if it has the same general direction (> 0).
-	const dir = (e.z - camZ)*(tx - e.x) + (camX - e.x)*(tz - e.z)
+	const dir = (o.z - camZ)*(tx - o.x) + (camX - o.x)*(tz - o.z)
 	// This expression could be simplified so that it does not contain
 	// all these repetitions but this is compressing better.
 	if (dir < 0) {
-		e.sprite = idle + 1 + e.frame % frames + frames
+		o.sprite = idle + 1 + o.frame % frames + frames
 	} else if (dir > 0) {
-		e.sprite = idle + 1 + e.frame % frames
+		o.sprite = idle + 1 + o.frame % frames
 	} else {
-		e.sprite = idle
+		o.sprite = idle
 	}
+}
+
+function dropItem() {
+	const a = player.dropAngle
+	this.x = player.x + Math.cos(a)
+	this.z = player.z + Math.sin(a)
+	player.dropAngle = a + 1
+	pickables.push(this)
+	items = items.filter(item => item != this)
+	updateInventory()
 }
 
 function updateInventory() {
@@ -137,14 +164,7 @@ function updateInventory() {
 	inventory.innerHTML = ''
 	items.forEach(o => {
 		const e = document.createElement('span')
-		e.onclick = function() {
-			const a = player.dropAngle
-			o.x = player.x + Math.cos(a)
-			o.z = player.z + Math.sin(a)
-			player.dropAngle = a + .314
-			items = items.filter(item => item != o)
-			updateInventory()
-		}
+		e.onclick = function() { o.use() }
 		e.innerHTML = `<svg viewBox="0 0 100 100" class="Item">${
 			o.icon.innerHTML}</svg>`
 		inventory.appendChild(e)
@@ -156,19 +176,22 @@ function updatePlayer() {
 		moveToPointer()
 		this.dropAngle = 0
 	}
-	moveToTarget(this, this.tx, this.tz, .09)
 	pickDirSprite(this, 0, 2, this.tx, this.tz)
-	fruits.forEach(o => {
-		const dx = o.x - this.x,
+	moveToTarget(this, this.tx, this.tz, .09)
+	for (let i = 0, l = pickables.length; i < l; ++i) {
+		const o = pickables[i],
+			dx = o.x - this.x,
 			dz = o.z - this.z,
 			d = dx*dx + dz*dz
 		if (d < .7) {
 			o.x = 100000
 			items.push(o)
 			updateInventory()
-			say('Picked something up')
+			pickables = pickables.filter(p => o != p)
+			say(`Picked up ${o.name}`)
+			break
 		}
-	})
+	}
 	// Make camera follow player with a slight delay.
 	const dx = lookX - this.x,
 		dz = lookZ - this.z,
@@ -180,50 +203,66 @@ function updatePlayer() {
 	}
 }
 
-function die() {
-	pickSprite(this, 1, 2)
+function hunt(o, prey, d) {
+	if (d < .7) {
+		// Eat it!
+		pickSprite(o, 8, 2)
+		if (!prey.eaten) {
+			prey.eaten = 1
+			prey.killed = now
+			prey.getEaten && prey.getEaten()
+		} else if (now - prey.killed > 300) {
+			pickables = pickables.filter(o => o != prey)
+			prey.x = 100000
+			prey.eaten = 0
+			prey.resurrect && prey.resurrect()
+		}
+		return
+	} else if (d < o.sight && o.ignore < 1) {
+		// Move towards prey.
+		pickDirSprite(o, 5, 2, prey.x, prey.z)
+		moveToTarget(o, prey.x, prey.z, o.speed)
+	} else {
+		// Nothing in sight. Walk along.
+		pickDirSprite(o, 5, 2, o.tx, o.tz)
+		if (moveToTarget(o, o.tx, o.tz, o.speed)) {
+			o.waypoint()
+		}
+		--o.ignore
+	}
+	// Detect if we're stuck and if so go to some random spot.
+	if (o.x == o.lx && o.z == o.lz &&
+			++o.stuck > 3) {
+		o.tx = o.x + random() * 4 - 2
+		o.tz = o.z + random() * 4 - 2
+		o.ignore = 10
+		o.stuck = 0
+	}
+	o.lx = o.x
+	o.lz = o.z
 }
 
 function updatePredator() {
+	let prey, closest = 100000
+	for (let i = 0, l = pickables.length; i < l; ++i) {
+		const o = pickables[i],
+			dx = o.x - this.x,
+			dz = o.z - this.z,
+			d = dx*dx + dz*dz
+		if (d < this.sight) {
+			closest = d
+			prey = o
+			break
+		}
+	}
 	const dx = player.x - this.x,
 		dz = player.z - this.z,
 		d = dx*dx + dz*dz
-	if (d < .7) {
-		pickSprite(this, 8, 2)
-		if (player.update != die) {
-			player.update = die
-			player.killed = now
-			say('Ouch!')
-		}
-		if (now - player.killed > 500) {
-			player.x = 100000
-			player.update = null
-			setTimeout(function() {
-				say('You got printed anew.')
-				player.x = player.z = player.tx = player.tz = 0
-				player.update = updatePlayer
-			}, 2000)
-		}
-		return
-	} else if (d < 16 && this.ignore < 1) {
-		moveToTarget(this, player.x, player.z, this.speed)
-		pickDirSprite(this, 5, 2, player.x, player.z)
-	} else {
-		if (moveToTarget(this, this.tx, this.tz, this.speed)) {
-			this.waypoint()
-		}
-		pickDirSprite(this, 5, 2, this.tx, this.tz)
-		--this.ignore
+	if (d < closest) {
+		prey = player
+		closest = d
 	}
-	if (this.x == this.lx && this.z == this.lz &&
-			++this.stuck > 3) {
-		this.tx = this.x + random() * 4 - 2
-		this.tz = this.z + random() * 4 - 2
-		this.ignore = 10
-		this.stuck = 0
-	}
-	this.lx = this.x
-	this.lz = this.z
+	hunt(this, prey, closest)
 }
 
 function run() {
@@ -543,8 +582,8 @@ function init(atlas) {
 		o.mat = new Float32Array(idMat)
 		const size = spriteSizes[o.sprite]
 		scale(o.mat, spriteMat, size[0], size[1], 1)
-		if (o.icon) {
-			o.icon = document.getElementById(o.icon)
+		if (o.name) {
+			o.icon = document.getElementById(o.name)
 		}
 	})
 
