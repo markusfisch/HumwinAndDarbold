@@ -192,9 +192,9 @@ function run() {
 
 	// Draw ground.
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
-	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, 0, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundUvBuffer)
-	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, 0, 0, 0)
 
 	const mx = lookX >> 1, mz = lookZ >> 1
 	updateGroundUvs(mx, mz)
@@ -204,12 +204,12 @@ function run() {
 	cacheMat[12] = mx << 1
 	cacheMat[14] = mz << 1
 	multiply(modelViewMat, viewMat, cacheMat)
-	gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
+	gl.uniformMatrix4fv(modelViewMatLoc, 0, modelViewMat)
 	gl.drawArrays(gl.TRIANGLES, 0, groundLength)
 
 	// Draw sprites.
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteModelBuffer)
-	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, gl.FALSE, 0, 0)
+	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, 0, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
 
 	objects.forEach(o => {
@@ -233,13 +233,13 @@ function run() {
 		o.dist = x*x + y*y + z*z
 	})
 	objects.sort(compareDist).forEach(o => {
-		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, gl.FALSE, 0, o.sprite << 5)
+		gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, 0, 0, o.sprite << 5)
 		const om = o.mat
 		om[12] = o.x
 		om[13] = o.y
 		om[14] = o.z
 		multiply(modelViewMat, viewMat, om)
-		gl.uniformMatrix4fv(modelViewMatLoc, gl.FALSE, modelViewMat)
+		gl.uniformMatrix4fv(modelViewMatLoc, 0, modelViewMat)
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 	})
 }
