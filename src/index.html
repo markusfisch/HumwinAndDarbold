@@ -12,7 +12,7 @@
 html, body {
 	margin: 0; padding: 0;
 	background: #111; color: #fff;
-	font: 120% monospace;
+	font: min(min(3vw, 3vh), 110%) sans-serif;
 	overflow: hidden;
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 	-webkit-touch-callout: none;
@@ -28,21 +28,33 @@ canvas {
 	width: 100%;
 	height: 100%;
 }
-svg {
+#Gfx {
 	display: none;
 }
 #Message {
 	display: none;
 	position: fixed;
-	left: 0; right: 0; top: 0%;
 	background: rgba(0,0,0,.3);
-	padding: 1em;
+	left: 0; right: 0;
+	padding: .7em;
+	top: 0;
+}
+#Inventory {
+	display: none;
+	position: fixed;
+	background: rgba(0,0,0,.3);
+	left: 0; right: 0;
+	padding: min(1vw, 1vh);
+	bottom: 0;
+}
+.Item {
+	width: max(5vw, 5vh);
 }
 </style>
 </head>
 <body>
 <canvas id="Canvas">Sorry, this browser cannot render this content.</canvas>
-<svg>
+<svg id="Gfx">
 <!-- 0: player mock-up idle --><g>
 	<rect style="fill: #fff;" x="40" y="90" width="4" height="10"/>
 	<rect style="fill: #fff;" x="56" y="90" width="4" height="10"/>
@@ -126,8 +138,15 @@ svg {
 <!-- 13: ground highlight --><g>
 	<rect style="fill: #aaa;" x="0" y="0" width="100" height="100"/>
 </g>
+<!-- 14: fruit --><g id="Fruit1">
+	<circle style="fill: #5f5;" r="20" cx="50" cy="75"/>
+</g>
+<!-- 15: fruit --><g id="Fruit2">
+	<circle style="fill: #f5f;" r="25" cx="50" cy="70"/>
+</g>
 </svg>
 <div id="Message"></div>
+<div id="Inventory"></div>
 </body>
 <script id="VertexShader" type="x-shader/x-vertex">
 #ifdef GL_FRAGMENT_PRECISION_HIGH

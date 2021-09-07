@@ -26,8 +26,10 @@ const horizon = 100,
 	compareDist = (a, b) => b.dist - a.dist,
 	camera = {x: 0, z: 0},
 	objects = [
-		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
+		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0, dropAngle: 0,
 			last: 0, frame: 0, update: updatePlayer},
+		{sprite: 14, x: 5, y: 0, z: 2, icon: 'Fruit1'},
+		{sprite: 15, x: 3, y: 0, z: 1, icon: 'Fruit2'},
 		{sprite: 0, x: 4, y: 0, z: 4},
 		{sprite: 5, x: 3.5, y: 0, z: 3.5},
 		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
@@ -54,6 +56,7 @@ const horizon = 100,
 
 let seed = 1,
 	message,
+	inventory,
 	gl,
 	spriteModelBuffer,
 	spriteUvBuffer,
@@ -72,6 +75,8 @@ let seed = 1,
 	lookX,
 	lookZ,
 	pointers,
+	fruits = [objects[1], objects[2]],
+	items = [],
 	now
 
 function say(what) {
@@ -123,12 +128,51 @@ function pickDirSprite(e, idle, frames, tx, tz) {
 	}
 }
 
+function updateInventory() {
+	if (items.length == 0) {
+		inventory.style.display = 'none'
+		return
+	}
+	inventory.style.display = 'block'
+	inventory.innerHTML = ''
+	items.forEach(o => {
+		const e = document.createElement('span')
+		e.onclick = function() {
+			const a = player.dropAngle
+			o.x = player.x + Math.cos(a)
+			o.z = player.z + Math.sin(a)
+			player.dropAngle = a + .314
+			items = items.filter(item => item != o)
+			updateInventory()
+		}
+		e.innerHTML = `<svg viewBox="0 0 100 100" class="Item">${
+			o.icon.innerHTML}</svg>`
+		inventory.appendChild(e)
+	})
+}
+
+function pickUp(o) {
+	o.x = 100000
+	items.push(o)
+	updateInventory()
+	say('Picked something up')
+}
+
 function updatePlayer() {
 	if (pointers > 0) {
 		moveToPointer()
+		this.dropAngle = 0
 	}
 	moveToTarget(this, this.tx, this.tz, .09)
 	pickDirSprite(this, 0, 2, this.tx, this.tz)
+	fruits.forEach(o => {
+		const dx = o.x - this.x,
+			dz = o.z - this.z,
+			d = dx*dx + dz*dz
+		if (d < .7) {
+			pickUp(o)
+		}
+	})
 	// Make camera follow player with a slight delay.
 	const dx = lookX - this.x,
 		dz = lookZ - this.z,
@@ -469,17 +513,17 @@ function createMap() {
 		y = mapRadius - 4,
 		o = y * mapSize + x
 	o += mapSize - 1
-	map[o++] = 14 | 128
-	map[o++] = 15 | 128
 	map[o++] = 16 | 128
-	o -= mapSize + 3
-	map[o++] = 21 | 128
-	map[o++] = 22 | 128
 	map[o++] = 17 | 128
-	o -= mapSize + 3
-	map[o++] = 20 | 128
-	map[o++] = 19 | 128
 	map[o++] = 18 | 128
+	o -= mapSize + 3
+	map[o++] = 23 | 128
+	map[o++] = 24 | 128
+	map[o++] = 19 | 128
+	o -= mapSize + 3
+	map[o++] = 22 | 128
+	map[o++] = 21 | 128
+	map[o++] = 20 | 128
 }
 
 function init(atlas) {
@@ -503,11 +547,16 @@ function init(atlas) {
 		o.mat = new Float32Array(idMat)
 		const size = spriteSizes[o.sprite]
 		scale(o.mat, spriteMat, size[0], size[1], 1)
+		if (o.icon) {
+			o.icon = document.getElementById(o.icon)
+		}
 	})
 
 	message = document.getElementById('Message')
+	inventory = document.getElementById('Inventory')
 
-	gl = document.getElementById('Canvas').getContext('webgl')
+	const canvas = document.getElementById('Canvas')
+	gl = canvas.getContext('webgl')
 	gl.enable(gl.BLEND)
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
@@ -552,29 +601,27 @@ function init(atlas) {
 	window.onresize = resize
 	resize()
 
-	document.onmousedown = pointerDown
-	document.onmousemove = pointerMove
-	document.onmouseup = pointerUp
-	document.onmouseout = pointerCancel
+	canvas.onmousedown = pointerDown
+	canvas.onmousemove = pointerMove
+	canvas.onmouseup = pointerUp
+	canvas.onmouseout = pointerCancel
 
-	if ('ontouchstart' in document) {
-		document.ontouchstart = pointerDown
-		document.ontouchmove = pointerMove
-		document.ontouchend = pointerUp
-		document.ontouchleave = pointerCancel
-		document.ontouchcancel = pointerCancel
+	canvas.ontouchstart = pointerDown
+	canvas.ontouchmove = pointerMove
+	canvas.ontouchend = pointerUp
+	canvas.ontouchleave = pointerCancel
+	canvas.ontouchcancel = pointerCancel
 
-		// Prevent pinch/zoom on iOS 11.
-		document.addEventListener('gesturestart', function(event) {
-			event.preventDefault()
-		}, 0)
-		document.addEventListener('gesturechange', function(event) {
-			event.preventDefault()
-		}, 0)
-		document.addEventListener('gestureend', function(event) {
-			event.preventDefault()
-		}, 0)
-	}
+	// Prevent pinch/zoom on iOS 11 and above.
+	document.addEventListener('gesturestart', function(event) {
+		event.preventDefault()
+	}, 0)
+	document.addEventListener('gesturechange', function(event) {
+		event.preventDefault()
+	}, 0)
+	document.addEventListener('gestureend', function(event) {
+		event.preventDefault()
+	}, 0)
 
 	run()
 }
