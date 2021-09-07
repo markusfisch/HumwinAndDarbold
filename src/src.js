@@ -151,13 +151,6 @@ function updateInventory() {
 	})
 }
 
-function pickUp(o) {
-	o.x = 100000
-	items.push(o)
-	updateInventory()
-	say('Picked something up')
-}
-
 function updatePlayer() {
 	if (pointers > 0) {
 		moveToPointer()
@@ -170,7 +163,10 @@ function updatePlayer() {
 			dz = o.z - this.z,
 			d = dx*dx + dz*dz
 		if (d < .7) {
-			pickUp(o)
+			o.x = 100000
+			items.push(o)
+			updateInventory()
+			say('Picked something up')
 		}
 	})
 	// Make camera follow player with a slight delay.
