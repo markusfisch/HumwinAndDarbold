@@ -165,7 +165,7 @@ function updateInventory() {
 	items.forEach(o => {
 		const e = document.createElement('span')
 		e.onclick = function() { o.use() }
-		e.innerHTML = `<svg viewBox="0 0 100 100" class="Item">${
+		e.innerHTML = `<svg viewBox="0 0 100 100" class="Itm">${
 			o.icon.innerHTML}</svg>`
 		inventory.appendChild(e)
 	})
@@ -589,10 +589,10 @@ function init(atlas) {
 		}
 	})
 
-	message = document.getElementById('Message')
-	inventory = document.getElementById('Inventory')
+	message = document.getElementById('M')
+	inventory = document.getElementById('I')
 
-	const canvas = document.getElementById('Canvas')
+	const canvas = document.getElementById('C')
 	gl = canvas.getContext('webgl')
 	gl.enable(gl.BLEND)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)

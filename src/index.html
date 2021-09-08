@@ -28,10 +28,10 @@ canvas {
 	width: 100%;
 	height: 100%;
 }
-#Gfx {
+#G {
 	display: none;
 }
-#Message {
+#M {
 	display: none;
 	position: fixed;
 	background: rgba(0,0,0,.3);
@@ -39,7 +39,7 @@ canvas {
 	padding: .7em;
 	top: 0;
 }
-#Inventory {
+#I {
 	display: none;
 	position: fixed;
 	background: rgba(0,0,0,.3);
@@ -47,14 +47,14 @@ canvas {
 	padding: min(1vw, 1vh);
 	bottom: 0;
 }
-.Item {
+.Itm {
 	width: max(5vw, 5vh);
 }
 </style>
 </head>
 <body>
-<canvas id="Canvas">Sorry, this browser cannot render this content.</canvas>
-<svg id="Gfx">
+<canvas id="C">Sorry, this browser cannot render this content.</canvas>
+<svg id="G">
 <!-- 0: player mock-up idle --><g>
 	<rect style="fill: #fff;" x="40" y="90" width="4" height="10"/>
 	<rect style="fill: #fff;" x="56" y="90" width="4" height="10"/>
@@ -145,8 +145,8 @@ canvas {
 	<circle style="fill: #f5f;" r="25" cx="50" cy="70"/>
 </g>
 </svg>
-<div id="Message"></div>
-<div id="Inventory"></div>
+<div id="M"></div>
+<div id="I"></div>
 </body>
 <script id="VertexShader" type="x-shader/x-vertex">
 #ifdef GL_FRAGMENT_PRECISION_HIGH
