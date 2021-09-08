@@ -554,16 +554,27 @@ function createMap() {
 		o = y * mapSize + x
 	o += mapSize - 1
 	map[o++] = 16 | 128
-	map[o++] = 17 | 128
-	map[o++] = 18 | 128
-	o -= mapSize + 3
-	map[o++] = 23 | 128
+	map[o++] = 24 | 128
 	map[o++] = 24 | 128
 	map[o++] = 19 | 128
-	o -= mapSize + 3
-	map[o++] = 22 | 128
+
+	o -= mapSize + 4
 	map[o++] = 21 | 128
+	map[o++] = 17 | 128
 	map[o++] = 20 | 128
+	map[o++] = 27 | 128
+
+	o -= mapSize + 4
+	map[o++] = 21 | 128
+	map[o++] = 26 | 128
+	map[o++] = 23 | 128
+	map[o++] = 27 | 128
+
+	o -= mapSize + 4
+	map[o++] = 25 | 128
+	map[o++] = 18 | 128
+	map[o++] = 18 | 128
+	map[o++] = 22 | 128
 }
 
 function init(atlas) {
@@ -836,13 +847,21 @@ function random() {
 function createTiles(sources) {
 	for (let a = 0; a < 360; a += 90) {
 		// Corner
-		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 10 L100 100 L10 100 C10 ${
+		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 50 L100 100 L50 100 C50 ${
 			50 + Math.round(random() * 60 - 30)} ${
-			50 + Math.round(random() * 60 - 30)} 10 100 10Z"></path>`)
+			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
+		// Inverted corner
+		sources.push(`;${a}<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect><path style="fill:#444" d="M100 50 L100 100 L50 100 C50 ${
+			50 + Math.round(random() * 60 - 30)} ${
+			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
 		// Side
-		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 100 L0 100 L0 10 L10 10 C35 ${
-			10 + Math.round(random() * 10 - 5)} 65 ${
-			10 + Math.round(random() * 10 - 5)} 90 10 L100 10 L100 100Z"></path>`)
+		sources.push(`;${a}<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect><path style="fill:#444" d="M100 100 L0 100 L0 50 L10 50 C35 ${
+			50 + Math.round(random() * 12 - 6)} 65 ${
+			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
+		// Inverted side
+		/*sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 100 L0 100 L0 50 L10 50 C35 ${
+			50 + Math.round(random() * 12 - 6)} 65 ${
+			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)*/
 	}
 	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
 }
