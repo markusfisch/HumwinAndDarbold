@@ -291,6 +291,8 @@ function run() {
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, 0, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
 
+	// Some update()'s may change camera position so this needs to run
+	// in its own loop before everything else.
 	objects.forEach(o => {
 		if (o.update) {
 			if (now - o.last > 200) {
@@ -299,6 +301,8 @@ function run() {
 			}
 			o.update()
 		}
+	})
+	objects.forEach(o => {
 		// Less operations to calculate the distance from the view plane
 		// than it is to multiply the matrices.
 		// https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_plane
@@ -591,8 +595,15 @@ function init(atlas) {
 	const canvas = document.getElementById('Canvas')
 	gl = canvas.getContext('webgl')
 	gl.enable(gl.BLEND)
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+	gl.enable(gl.CULL_FACE)
+	gl.enable(gl.DEPTH_TEST)
+	// The sprites have transparent areas and so they still need be to
+	// drawn when they share the same depth value with a another sprite
+	// or one of them will be skipped when it would be visible through
+	// the transparent area.
+	gl.depthFunc(gl.LEQUAL)
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1)
 
 	const atlasTexture = createTexture(atlas.canvas),
 		groundVertices = createGroundModel()
