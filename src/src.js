@@ -858,10 +858,6 @@ function createTiles(sources) {
 		sources.push(`;${a}<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect><path style="fill:#444" d="M100 100 L0 100 L0 50 L10 50 C35 ${
 			50 + Math.round(random() * 12 - 6)} 65 ${
 			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
-		// Inverted side
-		/*sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 100 L0 100 L0 50 L10 50 C35 ${
-			50 + Math.round(random() * 12 - 6)} 65 ${
-			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)*/
 	}
 	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
 }
