@@ -97,7 +97,7 @@ let seed = 1,
 	now
 
 function say(what) {
-	message.style.display = 'block'
+	message.style.display = 'inline-block'
 	message.innerHTML = what
 	setTimeout(function() {
 		message.style.display = 'none'

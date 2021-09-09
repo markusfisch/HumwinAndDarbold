@@ -12,7 +12,7 @@
 html, body {
 	margin: 0; padding: 0;
 	background: #111; color: #fff;
-	font: min(min(3vw, 3vh), 110%) sans-serif;
+	font: min(min(4vw, 3vh), 110%) sans-serif;
 	overflow: hidden;
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 	-webkit-touch-callout: none;
@@ -31,20 +31,26 @@ canvas {
 #G {
 	display: none;
 }
+#W {
+	position: fixed;
+	left: 0; right: 0;
+	top: 40%;
+	text-align: center;
+}
 #M {
 	display: none;
-	position: fixed;
 	background: rgba(0,0,0,.3);
-	left: 0; right: 0;
+	border-radius: .5em;
 	padding: .7em;
-	top: 0;
 }
 #I {
-	display: none;
 	position: fixed;
-	background: rgba(0,0,0,.3);
 	left: 0; right: 0;
+	display: none;
+	background: rgba(0,0,0,.3);
+	border-radius: .5em;
 	padding: min(1vw, 1vh);
+	margin: min(1vw, 1vh);
 	bottom: 0;
 }
 .Itm {
@@ -145,7 +151,7 @@ canvas {
 	<circle style="fill: #f5f;" r="25" cx="50" cy="70"/>
 </g>
 </svg>
-<div id="M"></div>
+<div id="W"><div id="M"></div></div>
 <div id="I"></div>
 </body>
 <script id="VertexShader" type="x-shader/x-vertex">
