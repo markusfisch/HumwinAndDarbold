@@ -136,13 +136,13 @@ function pickDirSprite(o, idle, frames, tx, tz) {
 	const dir = (o.z - camZ)*(tx - o.x) + (camX - o.x)*(tz - o.z)
 	// This expression could be simplified so that it does not contain
 	// all these repetitions but this is compressing better.
-	if (dir < 0) {
-		o.sprite = idle + 1 + o.frame % frames + frames
-	} else if (dir > 0) {
-		o.sprite = idle + 1 + o.frame % frames
-	} else {
+	if (dir == 0) {
 		o.sprite = idle
+		o.dir = 1
+		return
 	}
+	o.sprite = idle + 1 + o.frame % frames
+	o.dir = dir < 0 ? -1 : 1
 }
 
 function dropItem() {
@@ -317,7 +317,7 @@ function run() {
 	})
 	objects.sort(compareDist).forEach(o => {
 		const n = o.sprite, size = spriteSizes[n]
-		scale(cacheMat, spriteMat, size[0], size[1], 1)
+		scale(cacheMat, spriteMat, size[0] * o.dir, size[1], 1)
 		cacheMat[12] = o.x
 		cacheMat[13] = o.y
 		cacheMat[14] = o.z
@@ -598,6 +598,7 @@ function init(atlas) {
 		if (o.name) {
 			o.icon = document.getElementById(o.name)
 		}
+		o.dir = 1
 	})
 
 	message = document.getElementById('M')
@@ -607,7 +608,6 @@ function init(atlas) {
 	gl = canvas.getContext('webgl')
 	gl.enable(gl.BLEND)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.enable(gl.CULL_FACE)
 	gl.enable(gl.DEPTH_TEST)
 	// The sprites have transparent areas and so they still need be to
 	// drawn when they share the same depth value with a another sprite
