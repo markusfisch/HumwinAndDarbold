@@ -45,7 +45,7 @@ const horizon = 100,
 				}, 2000)
 			}
 		},
-		{sprite: 10, x: 0, y: 0, z: 10, name: 'Egg', use: dropItem},
+		{sprite: 11, x: 0, y: 0, z: 10, name: 'Egg', use: dropItem},
 		{sprite: 3, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .06, sight: 16,
@@ -531,10 +531,8 @@ function createTexture(image) {
 }
 
 function createMap() {
-	for (let y = 0, o = 0; y < mapSize; ++y) {
-		for (let x = 0; x < mapSize; ++x, ++o) {
-			map[o] = random() > .5 ? 8 : 9
-		}
+	for (let i = 0, l = mapSize * mapSize; i < l; ++i) {
+		map[i] = 8 + random() * 3 | 0
 	}
 }
 
@@ -805,7 +803,7 @@ function random() {
 	return (seed = (seed * 9301 + 49297) % 233280) / 233280
 }
 
-function createTiles(sources) {
+/*function createTiles(sources) {
 	for (let a = 0; a < 360; a += 90) {
 		// Corner
 		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 50 L100 100 L50 100 C50 ${
@@ -821,7 +819,7 @@ function createTiles(sources) {
 			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
 	}
 	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
-}
+}*/
 
 window.onload = function() {
 	const sources = [],
@@ -829,7 +827,7 @@ window.onload = function() {
 	for (let i = 0, l = gs.length; i < l; ++i) {
 		sources.push(gs[i].innerHTML)
 	}
-	createTiles(sources)
+	//createTiles(sources)
 	waitForAtlas(createAtlas(sources))
 }
 
