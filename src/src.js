@@ -1,7 +1,7 @@
 'use strict'
 
 const horizon = 100,
-	camPos = [0, 16, 12],
+	camPos = [0, 12, 9],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
 		0, 1, 0, 0,
