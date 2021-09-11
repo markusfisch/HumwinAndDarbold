@@ -45,11 +45,11 @@ const horizon = 100,
 				}, 2000)
 			}
 		},
-		{sprite: 14, x: 5, y: 0, z: 2, name: 'Fruit1', use: dropItem},
-		{sprite: 15, x: 3, y: 0, z: 1, name: 'Fruit2', use: dropItem},
+		{sprite: 10, x: 5, y: 0, z: 2, name: 'Fruit1', use: dropItem},
+		{sprite: 11, x: 3, y: 0, z: 1, name: 'Fruit2', use: dropItem},
 		{sprite: 0, x: 4, y: 0, z: 4},
-		{sprite: 5, x: 3.5, y: 0, z: 3.5},
-		{sprite: 5, x: 5, y: 0, z: -4, tx: -5, tz: -4,
+		{sprite: 3, x: 3.5, y: 0, z: 3.5},
+		{sprite: 3, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .07, sight: 16,
 				update: updatePredator,
@@ -57,7 +57,7 @@ const horizon = 100,
 			this.tx = this.tx > 0 ? -5 : 5
 			this.tz = -4
 		}},
-		{sprite: 5, x: 0, y: 0, z: 10, tx: 0, tz: 10,
+		{sprite: 3, x: 0, y: 0, z: 10, tx: 0, tz: 10,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .07, sight: 16, a: 0,
 				update: updatePredator,
@@ -66,8 +66,8 @@ const horizon = 100,
 			this.tz = 10 + Math.sin(this.a) * 3
 			this.a += .5
 		}},
-		{sprite: 10, x: -2, y: 0, z: 2},
-		{sprite: 10, x: 4, y: 0, z: 3},
+		{sprite: 6, x: -2, y: 0, z: 2},
+		{sprite: 6, x: 4, y: 0, z: 3},
 	],
 	player = objects[0]
 
@@ -206,7 +206,7 @@ function updatePlayer() {
 function hunt(o, prey, d) {
 	if (d < .7) {
 		// Eat it!
-		pickSprite(o, 8, 2)
+		pickSprite(o, 4, 2)
 		if (!prey.eaten) {
 			prey.eaten = 1
 			prey.killed = now
@@ -220,11 +220,11 @@ function hunt(o, prey, d) {
 		return
 	} else if (d < o.sight && o.ignore < 1) {
 		// Move towards prey.
-		pickDirSprite(o, 5, 2, prey.x, prey.z)
+		pickDirSprite(o, 3, 2, prey.x, prey.z)
 		moveToTarget(o, prey.x, prey.z, o.speed)
 	} else {
 		// Nothing in sight. Walk along.
-		pickDirSprite(o, 5, 2, o.tx, o.tz)
+		pickDirSprite(o, 3, 2, o.tx, o.tz)
 		if (moveToTarget(o, o.tx, o.tz, o.speed)) {
 			o.waypoint()
 		}
@@ -538,7 +538,7 @@ function createTexture(image) {
 function createMap() {
 	// Map mock-up for debugging.
 	const innerRadius = mapRadius - groundRadius,
-		impassableSprite = 22
+		impassableSprite = 18
 	for (let i = 0, l = map.length; i < l; ++i) {
 		const y = Math.floor(i / mapSize),
 			x = i % mapSize,
@@ -547,34 +547,34 @@ function createMap() {
 			t = dx > dy
 		map[i] = dx > innerRadius || dy > innerRadius ?
 			(impassableSprite | 128) :
-			(dx + dy == 0 ? 13 : 11 + t)
+			(dx + dy == 0 ? 9 : 7 + t)
 	}
 	let x = mapRadius,
 		y = mapRadius - 4,
 		o = y * mapSize + x
 	o += mapSize - 1
-	map[o++] = 16 | 128
-	map[o++] = 24 | 128
-	map[o++] = 24 | 128
-	map[o++] = 19 | 128
-
-	o -= mapSize + 4
-	map[o++] = 21 | 128
-	map[o++] = 17 | 128
+	map[o++] = 12 | 128
 	map[o++] = 20 | 128
-	map[o++] = 27 | 128
+	map[o++] = 20 | 128
+	map[o++] = 15 | 128
+
+	o -= mapSize + 4
+	map[o++] = 17 | 128
+	map[o++] = 13 | 128
+	map[o++] = 16 | 128
+	map[o++] = 23 | 128
+
+	o -= mapSize + 4
+	map[o++] = 17 | 128
+	map[o++] = 22 | 128
+	map[o++] = 19 | 128
+	map[o++] = 23 | 128
 
 	o -= mapSize + 4
 	map[o++] = 21 | 128
-	map[o++] = 26 | 128
-	map[o++] = 23 | 128
-	map[o++] = 27 | 128
-
-	o -= mapSize + 4
-	map[o++] = 25 | 128
+	map[o++] = 14 | 128
+	map[o++] = 14 | 128
 	map[o++] = 18 | 128
-	map[o++] = 18 | 128
-	map[o++] = 22 | 128
 }
 
 function init(atlas) {
@@ -588,7 +588,7 @@ function init(atlas) {
 			z = -innerRadius + (random() * (innerRadius * 2)) | 0
 		if (!(map[(mapRadius + Math.round(z / 2)) * mapSize +
 				(mapRadius + Math.round(x / 2))] & 128)) {
-			objects.push({sprite: 10, x: x, y: 0, z: z})
+			objects.push({sprite: 6, x: x, y: 0, z: z})
 			--i
 		}
 	}
