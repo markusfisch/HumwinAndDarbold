@@ -180,7 +180,6 @@ function updatePlayer() {
 			items.push(o)
 			updateInventory()
 			pickables = pickables.filter(p => o != p)
-			say(`Picked up ${o.name}`)
 			break
 		}
 	}
@@ -205,9 +204,7 @@ function eat(prey) {
 		prey.x = 100000
 		prey.eaten = 0
 		prey.resurrect && prey.resurrect()
-		return 1
 	}
-	return 0
 }
 
 function hunt(o, prey, d) {
@@ -538,26 +535,25 @@ function createMap() {
 		map[i] = 8 + random() * 3 | 0
 	}
 
-	const innerRadius = (mapRadius - groundRadius) * 2,
-		ofs = (x, z) => (mapRadius + Math.round(z / 2)) * mapSize +
-			(mapRadius + Math.round(x / 2))
-
-	map[ofs(4, 0)] = 11
 	objects.push({
-		sprite: 14, x: 4, y: 0, z: 0,
+		sprite: 13, x: 4, y: 0, z: 0,
 		last: 0, frame: 0,
 		update: function() {
 			const dx = player.x - this.x,
 				dz = player.z - this.z,
 				d = dx*dx + dz*dz
-			if (d < 2) {
-				pickDirSprite(this, 14, 2, player.x, player.z)
-				if (eat(player)) {
-					this.sprite = 14
-				}
+			if (d < 1) {
+				pickDirSprite(this, 13, 2, player.x, player.z)
+				eat(player)
+			} else {
+				this.sprite = 13
 			}
 		},
 	})
+
+	const innerRadius = (mapRadius - groundRadius) * 2,
+		ofs = (x, z) => (mapRadius + Math.round(z / 2)) * mapSize +
+			(mapRadius + Math.round(x / 2))
 
 	// Add fauna objects.
 	for (let i = 300; i > 0;) {
@@ -571,15 +567,16 @@ function createMap() {
 	}
 
 	// Add pickables.
+	const r = 15
 	for (let i = 50; i > 0;) {
-		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
-			z = -innerRadius + (random() * (innerRadius * 2)) | 0
+		const x = -r + (random() * (r * 2)) | 0,
+			z = -r + (random() * (r * 2)) | 0
 		if (x*x + z*z > 2 &&
 				!(map[ofs(x, z)] & 128)) {
-			const sprite = 12 + random() * 2 | 0, o = {
+			const sprite = 11 + random() * 2 | 0, o = {
 				sprite: sprite,
 				x: x, y: 0, z: z,
-				name: sprite == 12 ? 'Egg' : 'Flower',
+				name: sprite == 11 ? 'Egg' : 'Flower',
 				use: dropItem,
 			}
 			objects.push(o)

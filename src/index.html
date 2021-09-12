@@ -148,29 +148,21 @@ canvas {
 	<rect style="fill:#59246e" width="100" height="100"/>
 	<path style="fill:#491d5b" d="M 25 10 C 43 22 69 23 96 47 C 77 35 52 28 25 10 Z"/>
 </g>
-<!-- 11: snake ground --><g>
-	<rect style="fill:#59246e" width="100" height="100"/>
-	<circle style="fill:#491d5b" cx="50" cy="50" r="41"/>
-	<path style="fill:#351542" d="M 30 18 C 41 43 51 43 70 81 C 57 62 43 55 30 18 Z"/>
-	<path style="fill:#351542" d="M 17 69 C 39 69 49 39 83 30 C 61 46 46 71 17 69 Z"/>
-	<path style="fill:#351542" d="M 11 39 C 35 55 50 43 89 59 C 63 55 47 66 11 39 Z"/>
-	<path style="fill:#351542" d="M 46 87 C 43 63 51 50 49 11 C 53 37 55 43 46 87 Z"/>
-</g>
-<!-- 12: egg --><g id="Egg">
+<!-- 11: egg --><g id="Egg">
 	<ellipse style="fill-opacity: 0.2" cx="49" cy="93" rx="23" ry="3"/>
 	<ellipse style="fill:#dfffeb" cx="49" cy="76" rx="10" ry="15"/>
 	<path style="fill:none;stroke:#c0dccb" d="M 39 76 C 40 69 23 59 29 48"/>
 	<path style="fill:#af46d8" d="M 48 94 C 29 93 34 74 19 71 C 32 65 52 80 48 94 Z"/>
 	<path style="fill:#c0dccb" d="M 55 68 C 56 71 56 73 55 74 C 53 75 51 73 50 71 C 49 68 49 66 50 65 C 52 64 54 66 55 68 Z"/>
-	<path style="fill:none;stroke:#c0dccb" d="M 59 80 C 75 67 64 62 61 51"/>
+	<!--path style="fill:none;stroke:#c0dccb" d="M 59 80 C 75 67 64 62 61 51"/-->
 	<path style="fill:#903ab2" d="M 48 94 C 46 79 73 67 79 77 C 65 75 66 94 48 94 Z"/>
-	<path style="fill:none;stroke:#c0dccb" d="M 49 62 C 50 55 46 45 52 34"/>
+	<!--path style="fill:none;stroke:#c0dccb" d="M 49 62 C 50 55 46 45 52 34"/-->
 	<path style="fill:#dfffeb" d="M 52 34 C 54 33 57 38 57 41 C 55 38 50 36 52 34 Z"/>
 	<path style="fill:#dfffeb" d="M 52 34 C 51 32 45 35 44 37 C 47 37 53 36 52 34 Z"/>
 	<path style="fill:#dfffeb" d="M 52 34 C 54 33 50 29 46 29 C 50 31 50 35 52 34 Z"/>
 	<path style="fill:#dfffeb" d="M 52 34 C 52 31 58 31 61 33 C 57 33 53 36 52 34 Z"/>
 </g>
-<!-- 13: flower --><g id="Flower">
+<!-- 12: flower --><g id="Flower">
 	<ellipse style="fill-opacity: 0.2" cx="50" cy="93" rx="25" ry="3"/>
 	<path style="fill:#903ab2" d="M 48 91 C 48 84 49 67 43 48 C 48 55 50 63 51 69 C 54 65 59 62 65 63 C 58 67 61 74 52 74 C 52 80 49 92 48 91 Z"/>
 	<path style="fill:#903ab2" d="M 49 94 C 68 93 62 78 77 75 C 64 69 45 80 49 94 Z"/>
@@ -181,14 +173,24 @@ canvas {
 	<path style="fill:#dfffeb" d="M 42 45 C 35 45 43 36 50 40 C 53 42 49 45 42 45 Z"/>
 	<ellipse style="fill:#c0dccb" cx="44" cy="46" rx="5" ry="3"/>
 </g>
-<!-- 14: snake inactive --><g>
-	<ellipse style="fill:#ff3a68" cx="50" cy="100" rx="9" ry="8"/>
+<!-- 13: snake inactive --><g>
+	<path style="fill:#351542" d="M 25 93 C 41 89 49 80 75 81 C 58 86 47 96 25 93 Z"/>
+	<path style="fill:#351542" d="M 21 84 C 40 87 56 83 79 90 C 60 89 48 96 21 84 Z"/>
+	<path style="fill:#ff3a68" d="M 57 86 C 57 90 43 90 43 86 C 43 82 46 79 50 79 C 54 79 57 82 57 86 Z"/>
 </g>
-<!-- 15: snake biting #1 --><g>
-	<path style="fill:#ff3a68" d="M 61 92 C 59 67 32 24 22 45 L 31 47 L 22 49 C 18 54 51 47 43 92 C 45 96 63 96 61 92 Z"/>
+<!-- 14: snake biting #1 --><g>200x
+	<path style="fill:#351542" d="M 85 67 C 103 75 117 71 123 93 C 110 85 86 84 85 67 Z"/>
+	<path style="fill:#351542" d="M 73 88 C 93 83 103 71 135 72 C 114 79 100 91 73 88 Z"/>
+	<path style="fill:#351542" d="M 68 76 C 91 80 112 75 140 84 C 117 83 101 91 68 76 Z"/>
+	<path style="fill:#351542" d="M 100 95 C 93 83 105 80 103 65 C 107 75 119 83 100 95 Z"/>
+	<path style="fill:#ff3a68" d="M 111 80 C 110 50 109 48 102 32 C 84 -7 4 1 27 40 C 28 42 55 25 64 40 C 73 55 36 50 38 51 C 54 62 90 45 93 80 C 95 84 113 84 111 80 Z"/>
 </g>
-<!-- 16: snake biting #2 --><g>200x
-	<path style="fill:#ff3a68" d="M 108 92 C 98 52 39 43 39 57 L 46 59 L 40 59 C 36 67 86 49 90 92 C 92 96 110 96 108 92 Z"/>
+<!-- 15: snake biting #2 --><g>200x
+	<path style="fill:#351542" d="M 85 67 C 103 75 117 71 123 93 C 110 85 86 84 85 67 Z"/>
+	<path style="fill:#351542" d="M 73 88 C 93 83 103 71 135 72 C 114 79 100 91 73 88 Z"/>
+	<path style="fill:#351542" d="M 68 76 C 91 80 112 75 140 84 C 117 83 101 91 68 76 Z"/>
+	<path style="fill:#351542" d="M 100 95 C 93 83 105 80 103 65 C 107 75 119 83 100 95 Z"/>
+	<path style="fill:#ff3a68" d="M 111 80 C 110 50 109 48 102 32 C 84 -7 7 13 30 52 C 31 54 49 41 63 46 C 77 51 40 52 42 53 C 58 64 90 45 93 80 C 95 84 113 84 111 80 Z"/>
 </g>
 <div id="W"><div id="M"></div></div>
 <div id="I"></div>
