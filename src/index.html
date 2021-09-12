@@ -148,8 +148,16 @@ canvas {
 	<rect style="fill:#59246e" width="100" height="100"/>
 	<path style="fill:#491d5b" d="M 25 10 C 43 22 69 23 96 47 C 77 35 52 28 25 10 Z"/>
 </g>
-<!-- 11: egg --><g id="Egg">
-	<ellipse style="fill-opacity: 0.2;" cx="49" cy="93" rx="23" ry="3"/>
+<!-- 11: snake ground --><g>
+	<rect style="fill:#59246e" width="100" height="100"/>
+	<circle style="fill:#491d5b" cx="50" cy="50" r="41"/>
+	<path style="fill:#351542" d="M 30 18 C 41 43 51 43 70 81 C 57 62 43 55 30 18 Z"/>
+	<path style="fill:#351542" d="M 17 69 C 39 69 49 39 83 30 C 61 46 46 71 17 69 Z"/>
+	<path style="fill:#351542" d="M 11 39 C 35 55 50 43 89 59 C 63 55 47 66 11 39 Z"/>
+	<path style="fill:#351542" d="M 46 87 C 43 63 51 50 49 11 C 53 37 55 43 46 87 Z"/>
+</g>
+<!-- 12: egg --><g id="Egg">
+	<ellipse style="fill-opacity: 0.2" cx="49" cy="93" rx="23" ry="3"/>
 	<ellipse style="fill:#dfffeb" cx="49" cy="76" rx="10" ry="15"/>
 	<path style="fill:none;stroke:#c0dccb" d="M 39 76 C 40 69 23 59 29 48"/>
 	<path style="fill:#af46d8" d="M 48 94 C 29 93 34 74 19 71 C 32 65 52 80 48 94 Z"/>
@@ -162,7 +170,26 @@ canvas {
 	<path style="fill:#dfffeb" d="M 52 34 C 54 33 50 29 46 29 C 50 31 50 35 52 34 Z"/>
 	<path style="fill:#dfffeb" d="M 52 34 C 52 31 58 31 61 33 C 57 33 53 36 52 34 Z"/>
 </g>
-</svg>
+<!-- 13: flower --><g id="Flower">
+	<ellipse style="fill-opacity: 0.2" cx="50" cy="93" rx="25" ry="3"/>
+	<path style="fill:#903ab2" d="M 48 91 C 48 84 49 67 43 48 C 48 55 50 63 51 69 C 54 65 59 62 65 63 C 58 67 61 74 52 74 C 52 80 49 92 48 91 Z"/>
+	<path style="fill:#903ab2" d="M 49 94 C 68 93 62 78 77 75 C 64 69 45 80 49 94 Z"/>
+	<path style="fill:#af46d8" d="M 50 94 C 52 79 32 66 19 77 C 33 75 32 94 50 94 Z"/>
+	<path style="fill:#dfffeb" d="M 41 47 C 38 40 29 43 27 50 C 34 46 43 53 41 47 Z"/>
+	<path style="fill:#dfffeb" d="M 45 47 C 45 40 60 41 60 50 C 51 46 45 55 45 47 Z"/>
+	<path style="fill:#dfffeb" d="M 43 48 C 34 48 36 57 39 61 C 46 57 52 48 43 48 Z"/>
+	<path style="fill:#dfffeb" d="M 42 45 C 35 45 43 36 50 40 C 53 42 49 45 42 45 Z"/>
+	<ellipse style="fill:#c0dccb" cx="44" cy="46" rx="5" ry="3"/>
+</g>
+<!-- 14: snake inactive --><g>
+	<ellipse style="fill:#ff3a68" cx="50" cy="100" rx="9" ry="8"/>
+</g>
+<!-- 15: snake biting #1 --><g>
+	<path style="fill:#ff3a68" d="M 61 92 C 59 67 32 24 22 45 L 31 47 L 22 49 C 18 54 51 47 43 92 C 45 96 63 96 61 92 Z"/>
+</g>
+<!-- 16: snake biting #2 --><g>200x
+	<path style="fill:#ff3a68" d="M 108 92 C 98 52 39 43 39 57 L 46 59 L 40 59 C 36 67 86 49 90 92 C 92 96 110 96 108 92 Z"/>
+</g>
 <div id="W"><div id="M"></div></div>
 <div id="I"></div>
 </body>

@@ -435,17 +435,39 @@
 <path d="M 44 482 C 51 475 60 483 60 486" style="stroke: rgb(117, 152, 255); stroke-width: 3px; fill: none;"/>
 <path d="M 26 502 C 23 501 22 505 25 506 L 25 515 C 24 514 22 518 24 518 L 16 519 C 14 521 23 527 24 525 L 29 520 C 29 521 31 517 30 516 L 29 508 C 32 509 34 505 31 504 L 39 496 C 42 495 35 490 34 492 L 26 502 Z" style="fill: rgb(245, 245, 245);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="440"/>
-<path d="M 490 100 L 540 50 L 540 100 L 490 100 Z" style="fill: rgb(223, 255, 235);"/>
+<path d="M 490 100 L 540 50 L 540 100 L 490 100 Z" style="fill: rgb(255, 58, 104);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="550"/>
-<path d="M 600 100 C 600 80 630 50 650 50 L 650 100 L 600 100 Z" style="fill: rgb(223, 255, 235);"/>
+<path d="M 600 100 C 600 80 630 50 650 50 L 650 100 L 600 100 Z" style="fill: rgb(255, 58, 104);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="770"/>
-<path d="M 870 25 L 870 75 L 770 75 L 770 25 L 870 25 Z" style="fill: rgb(223, 255, 235);"/>
+<path d="M 870 25 L 870 75 L 770 75 L 770 25 L 870 25 Z" style="fill: rgb(255, 58, 104);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="660"/>
-<path d="M 760 25 L 760 75 L 735 100 L 685 100 L 760 25 Z" style="fill: rgb(223, 255, 235);"/>
+<path d="M 760 25 L 760 75 L 735 100 L 685 100 L 760 25 Z" style="fill: rgb(255, 58, 104);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="660" y="110"/>
-<path d="M 685 110 L 735 110 L 735 210 L 685 210 L 685 110 Z" style="fill: rgb(223, 255, 235);"/>
+<path d="M 685 110 L 735 110 L 735 210 L 685 210 L 685 110 Z" style="fill: rgb(255, 58, 104);"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="440" y="110"/>
 <rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="550" y="110"/>
-<rect width="50" height="100" style="fill: rgb(223, 255, 235);" x="600" y="110"/>
-<rect width="50" height="100" style="fill: rgb(223, 255, 235);" x="490" y="110"/>
+<rect width="50" height="100" style="fill: rgb(255, 58, 104);" x="600" y="110"/>
+<rect width="50" height="100" style="fill: rgb(255, 58, 104);" x="490" y="110"/>
+<rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="550" y="220"/>
+<path d="M 590 320 C 590 287 629 258 650 258 L 650 320 L 590 320 Z" style="fill: rgb(73, 29, 91);"/>
+<path d="M 600 320 C 600 300 630 270 650 270 L 650 320 L 600 320 Z" style="fill: rgb(255, 58, 104);"/>
+<rect width="100" height="100" style="fill: rgb(255, 58, 104);" x="440" y="220"/>
+<path d="M 458 239 C 479 245 504 238 537 252 C 515 246 489 248 458 239 Z" style="fill: rgb(255, 119, 148);"/>
+<path d="M 451 257 C 476 268 494 263 535 281 C 508 273 485 278 451 257 Z" style="fill: rgb(255, 119, 148);"/>
+<path d="M 447 291 C 475 298 491 291 535 300 C 506 298 484 306 447 291 Z" style="fill: rgb(255, 119, 148);"/>
+<rect width="100" height="100" style="fill: rgb(255, 58, 104);" x="440" y="330"/>
+<path d="M 451 357 C 492 386 489 340 535 381 C 481 348 490 395 451 357 Z" style="fill: rgb(255, 119, 148);"/>
+<path d="M 453 380 C 487 404 485 366 524 400 C 478 372 486 412 453 380 Z" style="fill: rgb(255, 119, 148);"/>
+<rect style="fill:#59246e" y="330" width="100" height="100" x="550"/>
+<path style="fill:#ff3a68" d="M 650 380 L 650 430 L 600 430 C 600 365 603 380 650 380 Z"/>
+<rect style="fill:#ff3a68" width="100" height="100" y="330" x="660"/>
+<path style="fill:#59246e" d="M 760 430 L 660 430 L 660 380 L 670 380 C 695 383 725 376 750 380 L 760 380 L 760 430 Z"/>
+<rect width="100" height="100" style="fill: rgb(89, 36, 110);" x="-660" y="440"/>
+<ellipse style="fill: rgb(73, 29, 91);" cy="490" rx="41" ry="41" cx="-610"/>
+<path d="M -630 458 C -619 483 -609 483 -590 521 C -603 502 -617 495 -630 458 Z" style="fill: rgb(53, 21, 66);"/>
+<path d="M -643 509 C -621 509 -611 479 -577 470 C -599 486 -614 511 -643 509 Z" style="fill: rgb(53, 21, 66);"/>
+<path d="M -649 479 C -625 495 -610 483 -571 499 C -597 495 -613 506 -649 479 Z" style="fill: rgb(53, 21, 66);"/>
+<path d="M -614 527 C -617 503 -609 490 -611 451 C -607 477 -605 483 -614 527 Z" style="fill: rgb(53, 21, 66);"/>
+<path d="M 42 92 C 44 67 71 24 81 45 L 72 47 L 81 49 C 85 54 52 47 60 92 C 58 96 40 96 42 92 Z" style="fill: rgb(255, 58, 104);"/>
+<path d="M 89 92 C 99 52 158 43 158 57 L 151 59 L 157 59 C 161 67 111 49 107 92 C 105 96 87 96 89 92 Z" style="fill: rgb(255, 58, 104);"/>
 </svg>

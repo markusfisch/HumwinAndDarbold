@@ -45,7 +45,6 @@ const horizon = 100,
 				}, 2000)
 			}
 		},
-		{sprite: 11, x: 0, y: 0, z: 10, name: 'Egg', use: dropItem},
 		{sprite: 3, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .06, sight: 16,
@@ -87,7 +86,7 @@ let seed = 1,
 	lookX,
 	lookZ,
 	pointers,
-	pickables = [objects[1]],
+	pickables = [],
 	items = [],
 	now
 
@@ -129,8 +128,6 @@ function pickDirSprite(o, idle, frames, tx, tz) {
 	// the dot product with the vector (tx - x, tz - z) tells us
 	// if it has the same general direction (> 0).
 	const dir = (o.z - camZ)*(tx - o.x) + (camX - o.x)*(tz - o.z)
-	// This expression could be simplified so that it does not contain
-	// all these repetitions but this is compressing better.
 	if (dir == 0) {
 		o.sprite = idle
 		o.dir = 1
@@ -142,8 +139,8 @@ function pickDirSprite(o, idle, frames, tx, tz) {
 
 function dropItem() {
 	const a = player.dropAngle
-	this.x = player.x + Math.cos(a)
-	this.z = player.z + Math.sin(a)
+	this.x = player.x + Math.cos(a) / 2
+	this.z = player.z + Math.sin(a) / 2
 	player.dropAngle = a + 1
 	pickables.push(this)
 	items = items.filter(item => item != this)
@@ -198,20 +195,26 @@ function updatePlayer() {
 	}
 }
 
+function eat(prey) {
+	if (!prey.eaten) {
+		prey.eaten = 1
+		prey.killed = now
+		prey.getEaten && prey.getEaten()
+	} else if (now - prey.killed > 1000) {
+		pickables = pickables.filter(o => o != prey)
+		prey.x = 100000
+		prey.eaten = 0
+		prey.resurrect && prey.resurrect()
+		return 1
+	}
+	return 0
+}
+
 function hunt(o, prey, d) {
 	if (d < .2) {
 		// Eat it!
 		pickSprite(o, 4, 2)
-		if (!prey.eaten) {
-			prey.eaten = 1
-			prey.killed = now
-			prey.getEaten && prey.getEaten()
-		} else if (now - prey.killed > 1000) {
-			pickables = pickables.filter(o => o != prey)
-			prey.x = 100000
-			prey.eaten = 0
-			prey.resurrect && prey.resurrect()
-		}
+		eat(prey)
 		return
 	} else if (d < o.sight && o.ignore < 1) {
 		// Move towards prey.
@@ -534,23 +537,61 @@ function createMap() {
 	for (let i = 0, l = mapSize * mapSize; i < l; ++i) {
 		map[i] = 8 + random() * 3 | 0
 	}
+
+	const innerRadius = (mapRadius - groundRadius) * 2,
+		ofs = (x, z) => (mapRadius + Math.round(z / 2)) * mapSize +
+			(mapRadius + Math.round(x / 2))
+
+	map[ofs(4, 0)] = 11
+	objects.push({
+		sprite: 14, x: 4, y: 0, z: 0,
+		last: 0, frame: 0,
+		update: function() {
+			const dx = player.x - this.x,
+				dz = player.z - this.z,
+				d = dx*dx + dz*dz
+			if (d < 2) {
+				pickDirSprite(this, 14, 2, player.x, player.z)
+				if (eat(player)) {
+					this.sprite = 14
+				}
+			}
+		},
+	})
+
+	// Add fauna objects.
+	for (let i = 300; i > 0;) {
+		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
+			z = -innerRadius + (random() * (innerRadius * 2)) | 0
+		if (x*x + z*z > 2 &&
+				!(map[ofs(x, z)] & 128)) {
+			objects.push({sprite: 6 + random() * 2 | 0, x: x, y: 0, z: z})
+			--i
+		}
+	}
+
+	// Add pickables.
+	for (let i = 50; i > 0;) {
+		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
+			z = -innerRadius + (random() * (innerRadius * 2)) | 0
+		if (x*x + z*z > 2 &&
+				!(map[ofs(x, z)] & 128)) {
+			const sprite = 12 + random() * 2 | 0, o = {
+				sprite: sprite,
+				x: x, y: 0, z: z,
+				name: sprite == 12 ? 'Egg' : 'Flower',
+				use: dropItem,
+			}
+			objects.push(o)
+			pickables.push(o)
+			--i
+		}
+	}
 }
 
 function init(atlas) {
 	lookAt(0, 0)
 	createMap()
-
-	// Add fauna objects.
-	const innerRadius = (mapRadius - groundRadius) * 2
-	for (let i = 300; i > 0;) {
-		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
-			z = -innerRadius + (random() * (innerRadius * 2)) | 0
-		if (!(map[(mapRadius + Math.round(z / 2)) * mapSize +
-				(mapRadius + Math.round(x / 2))] & 128)) {
-			objects.push({sprite: random() > .5 ? 6 : 7, x: x, y: 0, z: z})
-			--i
-		}
-	}
 
 	// Load inventory icons.
 	objects.forEach(o => {
