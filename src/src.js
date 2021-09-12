@@ -33,6 +33,7 @@ const horizon = 100,
 			getEaten: function() {
 				this.update = function() {
 					this.sprite = 3
+					this.dir = this.frame % 2 ? -1 : 1
 				}
 				items.length = 0
 				updateInventory()
