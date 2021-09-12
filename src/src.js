@@ -1,7 +1,8 @@
 'use strict'
 
-const horizon = 100,
-	camPos = [0, 12, 9],
+const horizon = 1000,
+	camPos = [0, 12 * 7, 9 * 7],
+	//camPos = [0, 12, 9],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
 		0, 1, 0, 0,
@@ -13,7 +14,7 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
-	mapSize = 64,//128, // DEBUG
+	mapSize = 128,
 	mapRadius = mapSize >> 1,
 	map = new Uint8Array(mapSize * mapSize),
 	groundSize = 35,
@@ -49,7 +50,7 @@ const horizon = 100,
 				}, 2000)
 			}
 		},
-		{sprite: 4, x: 5, y: 0, z: -4, tx: -5, tz: -4,
+		/*{sprite: 4, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .06, sight: 16,
 				update: updatePredator,
@@ -65,7 +66,7 @@ const horizon = 100,
 			this.tx = Math.cos(this.a) * 6
 			this.tz = 10 + Math.sin(this.a) * 6
 			this.a += .5
-		}},
+		}},*/
 	],
 	player = objects[0]
 
@@ -545,7 +546,7 @@ function createTexture(image) {
 	return id
 }
 
-function drawBlob(sprite, cx, cz, radius, abase, amul, bbase, bmul) {
+function drawBlob(cx, cz, radius, abase, amul, bbase, bmul) {
 	const mag = radius * .7
 	for (let z = -radius; z <= radius; ++z) {
 		for (let x = -radius; x <= radius; ++x) {
@@ -553,18 +554,47 @@ function drawBlob(sprite, cx, cz, radius, abase, amul, bbase, bmul) {
 				f = Math.sin(abase + angle * amul) *
 					Math.sin(bbase + angle * bmul) * mag
 			if (x*x + z*z + f*f < radius*radius) {
-				map[(cz + z) * mapSize + (cx + x)] = sprite + random() * 3 | 0
+				map[(cz + z) * mapSize + (cx + x)] = 11 + random() * 3 | 0
+			}
+		}
+	}
+}
+
+function drawCircle(cx, cz, radius) {
+	for (let z = -radius; z <= radius; ++z) {
+		for (let x = -radius; x <= radius; ++x) {
+			const angle = Math.atan2(z, x)
+			if (x*x + z*z < radius*radius) {
+				map[(cz + z) * mapSize + (cx + x)] = 11 + random() * 3 | 0
 			}
 		}
 	}
 }
 
 function createMap() {
-	const water = 19
+	const innerRadius = mapRadius - groundRadius,
+		water = 19
 	map.fill(water | 128)
-	drawBlob(11, mapRadius, mapRadius, mapRadius - groundRadius,
-		random() * 100, 2,
-		random() * 100, 3)
+
+	for (let i = 0, r = 5, x = 0, z = 0, n, a = 0;
+			i < 12; ++i) {
+		drawBlob(mapRadius + x, mapRadius + z, r,
+			random() * 100, 2,
+			random() * 100, 3)
+		//drawCircle(mapRadius + x, mapRadius + z, r)
+		objects.push({sprite: 9 + random() * 2 | 0,
+			x: x * 2,
+			y: 0,
+			z: z * 2})
+		n = 4 + random() * 4 | 0
+		if (i == 9) {
+			a += 3.14
+		}
+		a += .6
+		x += Math.cos(a) * (r + n * .8) | 0
+		z += Math.sin(a) * (r + n * .8) | 0
+		r = n
+	}
 
 	// Auto tiling.
 	const edges = new Uint8Array(mapSize * mapSize),
@@ -572,6 +602,22 @@ function createMap() {
 		ofs = (x, y) => clamp(y) * mapSize + clamp(x),
 		tile = (x, y) => map[ofs(x, y)],
 		needle = water | 128
+	// Close 1x1 holes.
+	for (let y = 0; y < mapSize; ++y) {
+		for (let x = 0; x < mapSize; ++x) {
+			const n = tile(x, y)
+			if (n == needle) {
+				const t = tile(x, y - 1),
+					l = tile(x - 1, y),
+					r = tile(x + 1, y),
+					b = tile(x, y + 1)
+				if ((l != n && r != n) || (t != n && b != n)) {
+					map[ofs(x, y)] = 11
+				}
+			}
+		}
+	}
+	// Find edges.
 	for (let y = 0; y < mapSize; ++y) {
 		for (let x = 0; x < mapSize; ++x) {
 			const n = tile(x, y),
@@ -601,6 +647,7 @@ function createMap() {
 			}
 		}
 	}
+	// Assign matching tiles.
 	for (let y = 0; y < mapSize; ++y) {
 		for (let x = 0; x < mapSize; ++x) {
 			const o = ofs(x, y),
@@ -611,7 +658,7 @@ function createMap() {
 			}
 		}
 	}
-
+/*
 	// Add a couple of snakes.
 	for (let a = Math.PI * 2, r = 0; a > 0; a -= .314, r ^= 1) {
 		objects.push({
@@ -667,7 +714,7 @@ function createMap() {
 			pickables.push(o)
 			--i
 		}
-	}
+	}*/
 }
 
 function init(atlas) {
