@@ -926,8 +926,6 @@ function random() {
 }
 
 function createTiles(sources) {
-	// Center
-	sources.push(`<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect>`)
 	const rot = (m) => {
 		const o = []
 		for (let y = 0; y < 3; ++y) {
@@ -960,7 +958,7 @@ function createTiles(sources) {
 	for (let a = 0, i = 0, id, m; a < 360; a += 90, ++i) {
 		// 3 corners ground, right bottom water.
 		id = sources.length
-		sources.push(`;${a}<rect style="fill:#59246e" x="0" y="0" width="100" height="100"></rect><path style="fill:#ff3a68" d="M100 50 L100 100 L50 100 C50 ${
+		sources.push(`;${a}<rect style="fill:#59246e" width="100" height="100"></rect><path style="fill:#ff3a68" d="M100 50 L100 100 L50 100 C50 ${
 			50 + Math.round(random() * 60 - 30)} ${
 			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
 		m = rott(cornerIn, i)
@@ -978,7 +976,7 @@ function createTiles(sources) {
 		tiles[toId(rott(m, i))] = id
 		// 3 corners water, right bottom ground.
 		id = sources.length
-		sources.push(`;${a}<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect><path style="fill:#59246e" d="M100 50 L100 100 L50 100 C50 ${
+		sources.push(`;${a}<rect style="fill:#ff3a68" width="100" height="100"></rect><path style="fill:#59246e" d="M100 50 L100 100 L50 100 C50 ${
 			50 + Math.round(random() * 60 - 30)} ${
 			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
 		m = rott(cornerOut, i)
@@ -986,7 +984,7 @@ function createTiles(sources) {
 		tiles[toId(m)] = id
 		// Side
 		id = sources.length
-		sources.push(`;${a}<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect><path style="fill:#59246e" d="M100 100 L0 100 L0 50 L10 50 C35 ${
+		sources.push(`;${a}<rect style="fill:#ff3a68" width="100" height="100"></rect><path style="fill:#59246e" d="M100 100 L0 100 L0 50 L10 50 C35 ${
 			50 + Math.round(random() * 12 - 6)} 65 ${
 			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
 		m = rott(side, i)
