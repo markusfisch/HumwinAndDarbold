@@ -13,11 +13,13 @@ const horizon = 100,
 	spriteMat = new Float32Array(16),
 	groundMat = new Float32Array(16),
 	cacheMat = new Float32Array(16),
-	mapSize = 128,
+	mapSize = 64,//128, // DEBUG
 	mapRadius = mapSize >> 1,
 	map = new Uint8Array(mapSize * mapSize),
 	groundSize = 35,
 	groundRadius = groundSize >> 1,
+	dns = [],
+	tiles = [],
 	spriteSizes = [],
 	screen = [],
 	pointerSpot = [0, 0, 0],
@@ -30,7 +32,7 @@ const horizon = 100,
 			last: 0, frame: 0, update: updatePlayer,
 			getEaten: function() {
 				this.update = function() {
-					pickSprite(this, 1, 2)
+					this.sprite = 3
 				}
 				items.length = 0
 				updateInventory()
@@ -40,12 +42,13 @@ const horizon = 100,
 				this.update = null
 				setTimeout(function() {
 					say('You got printed anew.')
-					player.x = player.z = player.tx = player.tz = 0
+					player.x = player.z = player.tx = player.tz =
+						player.killed = pointers = 0
 					player.update = updatePlayer
 				}, 2000)
 			}
 		},
-		{sprite: 3, x: 5, y: 0, z: -4, tx: -5, tz: -4,
+		{sprite: 4, x: 5, y: 0, z: -4, tx: -5, tz: -4,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .06, sight: 16,
 				update: updatePredator,
@@ -53,7 +56,7 @@ const horizon = 100,
 			this.tx = this.tx > 0 ? -5 : 5
 			this.tz = -4
 		}},
-		{sprite: 3, x: 10, y: 0, z: 10, tx: 10, tz: 10,
+		{sprite: 4, x: 10, y: 0, z: 10, tx: 10, tz: 10,
 				lx: 0, lz: 0, stuck: 0, ignore: 0,
 				last: 0, frame: 0, speed: .06, sight: 16, a: 0,
 				update: updatePredator,
@@ -91,9 +94,10 @@ let seed = 1,
 	now
 
 function say(what) {
+	clearTimeout(message.tid)
 	message.style.display = 'inline-block'
 	message.innerHTML = what
-	setTimeout(function() {
+	message.tid = setTimeout(function() {
 		message.style.display = 'none'
 	}, 1000 + 200 * what.split(' ').length)
 }
@@ -105,11 +109,20 @@ function moveToTarget(o, tx, tz, step) {
 		f = Math.min(1, step / d),
 		x = o.x + dx * f,
 		z = o.z + dz * f
-	if (o != camera && map[(mapRadius + Math.round(z / 2)) * mapSize +
-			(mapRadius + Math.round(x / 2))] & 128) {
-		o.tx = o.x
-		o.tz = o.z
-		return 1
+	if (o != camera) {
+		const mx = mapRadius + x / 2,
+			mz = mapRadius + z / 2,
+			rx = Math.round(mx),
+			rz = Math.round(mz),
+			t = map[rz * mapSize + rx],
+			fx = ((mx - rx) + .5) * 3 | 0,
+			fz = ((mz - rz) + .5) * 3 | 0
+		let m
+		if (t & 128 && (!(m = dns[t & 127]) || !m[fz * 3 + fx])) {
+			o.tx = o.x
+			o.tz = o.z
+			return 1
+		}
 	}
 	o.x = x
 	o.z = z
@@ -210,16 +223,16 @@ function eat(prey) {
 function hunt(o, prey, d) {
 	if (d < .2) {
 		// Eat it!
-		pickSprite(o, 4, 2)
+		pickSprite(o, 7, 2)
 		eat(prey)
 		return
 	} else if (d < o.sight && o.ignore < 1) {
 		// Move towards prey.
-		pickDirSprite(o, 3, 2, prey.x, prey.z)
+		pickDirSprite(o, 4, 2, prey.x, prey.z)
 		moveToTarget(o, prey.x, prey.z, o.speed)
 	} else {
 		// Nothing in sight. Walk along.
-		pickDirSprite(o, 3, 2, o.tx, o.tz)
+		pickDirSprite(o, 4, 2, o.tx, o.tz)
 		if (moveToTarget(o, o.tx, o.tz, o.speed)) {
 			o.waypoint()
 		}
@@ -354,7 +367,8 @@ function getGroundSpot(out, nx, ny) {
 }
 
 function moveToPointer() {
-	if (getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
+	if (!player.killed &&
+			getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
 		player.tx = pointerSpot[0]
 		player.tz = pointerSpot[2]
 	}
@@ -530,29 +544,98 @@ function createTexture(image) {
 	return id
 }
 
+function drawBlob(sprite, cx, cz, radius, abase, amul, bbase, bmul) {
+	const mag = radius * .7
+	for (let z = -radius; z <= radius; ++z) {
+		for (let x = -radius; x <= radius; ++x) {
+			const angle = Math.atan2(z, x),
+				f = Math.sin(abase + angle * amul) *
+					Math.sin(bbase + angle * bmul) * mag
+			if (x*x + z*z + f*f < radius*radius) {
+				map[(cz + z) * mapSize + (cx + x)] = sprite + random() * 3 | 0
+			}
+		}
+	}
+}
+
 function createMap() {
-	for (let i = 0, l = mapSize * mapSize; i < l; ++i) {
-		map[i] = 8 + random() * 3 | 0
+	const water = 19
+	map.fill(water | 128)
+	drawBlob(11, mapRadius, mapRadius, mapRadius - groundRadius,
+		random() * 100, 2,
+		random() * 100, 3)
+
+	// Auto tiling.
+	const edges = new Uint8Array(mapSize * mapSize),
+		clamp = (v) => Math.max(0, Math.min(v, mapSize - 1)),
+		ofs = (x, y) => clamp(y) * mapSize + clamp(x),
+		tile = (x, y) => map[ofs(x, y)],
+		needle = water | 128
+	for (let y = 0; y < mapSize; ++y) {
+		for (let x = 0; x < mapSize; ++x) {
+			const n = tile(x, y),
+				tl = tile(x - 1, y - 1),
+				t = tile(x, y - 1),
+				tr = tile(x + 1, y - 1),
+				l = tile(x - 1, y),
+				r = tile(x + 1, y),
+				bl = tile(x - 1, y + 1),
+				b = tile(x, y + 1),
+				br = tile(x + 1, y + 1)
+			if (n == needle && (tl != n || t != n || tr != n ||
+					l != n || r != n ||
+					bl != n || b != t || br != n)) {
+				// 012      1   2   4
+				// 3 4 =>   8      16
+				// 567     32  64 128
+				edges[ofs(x, y)] =
+					(tl != n) |
+					(t != n) << 1 |
+					(tr != n) << 2|
+					(l != n) << 3 |
+					(r != n) << 4 |
+					(bl != n) << 5 |
+					(b != n) << 6 |
+					(br != n) << 7
+			}
+		}
+	}
+	for (let y = 0; y < mapSize; ++y) {
+		for (let x = 0; x < mapSize; ++x) {
+			const o = ofs(x, y),
+				e = edges[o],
+				t = tiles[e]
+			if (t) {
+				map[o] = t | 128
+			}
+		}
 	}
 
-	objects.push({
-		sprite: 13, x: 4, y: 0, z: 0,
-		last: 0, frame: 0,
-		update: function() {
-			const dx = player.x - this.x,
-				dz = player.z - this.z,
-				d = dx*dx + dz*dz
-			if (d < 1) {
-				pickDirSprite(this, 13, 2, player.x, player.z)
-				eat(player)
-			} else {
-				this.sprite = 13
-			}
-		},
-	})
+	// Add a couple of snakes.
+	for (let a = Math.PI * 2, r = 0; a > 0; a -= .314, r ^= 1) {
+		objects.push({
+			sprite: 16,
+			x: Math.cos(a) * (r + 6),
+			y: 0,
+			z: Math.sin(a) * (r + 6),
+			last: 0,
+			frame: 0,
+			update: function() {
+				const dx = player.x - this.x,
+					dz = player.z - this.z,
+					d = dx*dx + dz*dz
+				if (d < .7) {
+					pickDirSprite(this, 16, 2, player.x, player.z)
+					eat(player)
+				} else {
+					this.sprite = 16
+				}
+			},
+		})
+	}
 
 	const innerRadius = (mapRadius - groundRadius) * 2,
-		ofs = (x, z) => (mapRadius + Math.round(z / 2)) * mapSize +
+		mofs = (x, z) => (mapRadius + Math.round(z / 2)) * mapSize +
 			(mapRadius + Math.round(x / 2))
 
 	// Add fauna objects.
@@ -560,8 +643,8 @@ function createMap() {
 		const x = -innerRadius + (random() * (innerRadius * 2)) | 0,
 			z = -innerRadius + (random() * (innerRadius * 2)) | 0
 		if (x*x + z*z > 2 &&
-				!(map[ofs(x, z)] & 128)) {
-			objects.push({sprite: 6 + random() * 2 | 0, x: x, y: 0, z: z})
+				!(map[mofs(x, z)] & 128)) {
+			objects.push({sprite: 9 + random() * 2 | 0, x: x, y: 0, z: z})
 			--i
 		}
 	}
@@ -572,11 +655,11 @@ function createMap() {
 		const x = -r + (random() * (r * 2)) | 0,
 			z = -r + (random() * (r * 2)) | 0
 		if (x*x + z*z > 2 &&
-				!(map[ofs(x, z)] & 128)) {
-			const sprite = 11 + random() * 2 | 0, o = {
+				!(map[mofs(x, z)] & 128)) {
+			const sprite = 14 + random() * 2 | 0, o = {
 				sprite: sprite,
 				x: x, y: 0, z: z,
-				name: sprite == 11 ? 'Egg' : 'Flower',
+				name: sprite == 14 ? 'Egg' : 'Flower',
 				use: dropItem,
 			}
 			objects.push(o)
@@ -841,12 +924,93 @@ function random() {
 	return (seed = (seed * 9301 + 49297) % 233280) / 233280
 }
 
+function createTiles(sources) {
+	// Center
+	sources.push(`<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect>`)
+	const rot = (m) => {
+		const o = []
+		for (let y = 0; y < 3; ++y) {
+			for (let x = 0; x < 3; ++x) {
+				o[y * 3 + x] = m[(2 - x) * 3 + y]
+			}
+		}
+		return o
+	}, rott = (m, t) => {
+		for (let i = 0; i < t; ++i) {
+			m = rot(m)
+		}
+		return m
+	}, toId = (m) => m[0] | m[1] << 1 | m[2] << 2 |
+			m[3] << 3 | m[5] << 4 |
+			m[6] << 5 | m[7] << 6 | m[8] << 7,
+		cornerIn = [
+		1,1,1,
+		1,0,0,
+		1,0,0,
+	], cornerOut = [
+		0,0,0,
+		0,0,0,
+		0,0,1,
+	], side = [
+		0,0,0,
+		0,0,0,
+		1,1,1,
+	]
+	for (let a = 0, i = 0, id, m; a < 360; a += 90, ++i) {
+		// 3 corners ground, right bottom water.
+		id = sources.length
+		sources.push(`;${a}<rect style="fill:#59246e" x="0" y="0" width="100" height="100"></rect><path style="fill:#ff3a68" d="M100 50 L100 100 L50 100 C50 ${
+			50 + Math.round(random() * 60 - 30)} ${
+			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
+		m = rott(cornerIn, i)
+		dns[id] = m
+		tiles[toId(m)] = id
+		m = cornerIn.slice(0)
+		m[2] = 0
+		tiles[toId(rott(m, i))] = id
+		m = cornerIn.slice(0)
+		m[6] = 0
+		tiles[toId(rott(m, i))] = id
+		m = cornerIn.slice(0)
+		m[2] = 0
+		m[6] = 0
+		tiles[toId(rott(m, i))] = id
+		// 3 corners water, right bottom ground.
+		id = sources.length
+		sources.push(`;${a}<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect><path style="fill:#59246e" d="M100 50 L100 100 L50 100 C50 ${
+			50 + Math.round(random() * 60 - 30)} ${
+			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
+		m = rott(cornerOut, i)
+		dns[id] = m
+		tiles[toId(m)] = id
+		// Side
+		id = sources.length
+		sources.push(`;${a}<rect style="fill:#ff3a68" x="0" y="0" width="100" height="100"></rect><path style="fill:#59246e" d="M100 100 L0 100 L0 50 L10 50 C35 ${
+			50 + Math.round(random() * 12 - 6)} 65 ${
+			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
+		m = rott(side, i)
+		dns[id] = m
+		tiles[toId(m)] = id
+		m = side.slice(0)
+		m[6] = 0
+		tiles[toId(rott(m, i))] = id
+		m = side.slice(0)
+		m[8] = 0
+		tiles[toId(rott(m, i))] = id
+		m = side.slice(0)
+		m[6] = 0
+		m[8] = 0
+		tiles[toId(rott(m, i))] = id
+	}
+}
+
 window.onload = function() {
 	const sources = [],
 		gs = document.getElementsByTagName('g')
 	for (let i = 0, l = gs.length; i < l; ++i) {
 		sources.push(gs[i].innerHTML)
 	}
+	createTiles(sources)
 	waitForAtlas(createAtlas(sources))
 }
 
