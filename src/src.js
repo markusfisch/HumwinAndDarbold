@@ -803,31 +803,12 @@ function random() {
 	return (seed = (seed * 9301 + 49297) % 233280) / 233280
 }
 
-/*function createTiles(sources) {
-	for (let a = 0; a < 360; a += 90) {
-		// Corner
-		sources.push(`;${a}<rect style="fill:#444" x="0" y="0" width="100" height="100"></rect><path style="fill:#008" d="M100 50 L100 100 L50 100 C50 ${
-			50 + Math.round(random() * 60 - 30)} ${
-			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
-		// Inverted corner
-		sources.push(`;${a}<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect><path style="fill:#444" d="M100 50 L100 100 L50 100 C50 ${
-			50 + Math.round(random() * 60 - 30)} ${
-			50 + Math.round(random() * 60 - 30)} 50 100 50Z"></path>`)
-		// Side
-		sources.push(`;${a}<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect><path style="fill:#444" d="M100 100 L0 100 L0 50 L10 50 C35 ${
-			50 + Math.round(random() * 12 - 6)} 65 ${
-			50 + Math.round(random() * 12 - 6)} 90 50 L100 50 L100 100Z"></path>`)
-	}
-	sources.push(`<rect style="fill:#008" x="0" y="0" width="100" height="100"></rect>`)
-}*/
-
 window.onload = function() {
 	const sources = [],
 		gs = document.getElementsByTagName('g')
 	for (let i = 0, l = gs.length; i < l; ++i) {
 		sources.push(gs[i].innerHTML)
 	}
-	//createTiles(sources)
 	waitForAtlas(createAtlas(sources))
 }
 
