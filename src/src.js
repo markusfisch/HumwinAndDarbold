@@ -206,7 +206,7 @@ function hunt(o, prey, d) {
 			prey.eaten = 1
 			prey.killed = now
 			prey.getEaten && prey.getEaten()
-		} else if (now - prey.killed > 300) {
+		} else if (now - prey.killed > 1000) {
 			pickables = pickables.filter(o => o != prey)
 			prey.x = 100000
 			prey.eaten = 0
