@@ -496,16 +496,16 @@ function createGroundModel() {
 				// | /
 				// |/
 				// C
-				xx - 1, 0, yy + 1,
-				xx + 1, 0, yy + 1,
 				xx - 1, 0, yy - 1,
+				xx + 1, 0, yy - 1,
+				xx - 1, 0, yy + 1,
 				//    E
 				//   /|
 				//  / |
 				// D--F
-				xx - 1, 0, yy - 1,
-				xx + 1, 0, yy + 1,
+				xx - 1, 0, yy + 1,
 				xx + 1, 0, yy - 1,
+				xx + 1, 0, yy + 1,
 			)
 		}
 	}
