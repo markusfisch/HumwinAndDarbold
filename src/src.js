@@ -796,6 +796,9 @@ function createMap() {
 					this.x = xx
 					this.z = zz
 					this.tasty = 0
+					if (pickables.filter(o => o == egg).length < 1) {
+						pickables.push(egg)
+					}
 				}
 			}
 			objects.push(egg)
