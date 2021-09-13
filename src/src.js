@@ -1,8 +1,9 @@
 'use strict'
 
 const horizon = 1000,
-	camPos = [0, 12 * 7, 9 * 7],
-	//camPos = [0, 12, 9],
+	//camPos = [0, 12 * 7, 9 * 7],
+	//camPos = [0, 12 * 4, 9 * 4],
+	camPos = [0, 12, 9],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
 		0, 1, 0, 0,
@@ -546,18 +547,103 @@ function createTexture(image) {
 	return id
 }
 
-function drawBlob(cx, cz, radius, abase, amul, bbase, bmul) {
-	const mag = radius * .7
-	for (let z = -radius; z <= radius; ++z) {
-		for (let x = -radius; x <= radius; ++x) {
-			const angle = Math.atan2(z, x),
-				f = Math.sin(abase + angle * amul) *
-					Math.sin(bbase + angle * bmul) * mag
-			if (x*x + z*z + f*f < radius*radius) {
-				map[(cz + z) * mapSize + (cx + x)] = 11 + random() * 3 | 0
+function addSnake(x, z) {
+	objects.push({
+		sprite: 16,
+		x: x,
+		y: 0,
+		z: z,
+		last: 0, frame: 0,
+		update: function() {
+			const dx = player.x - this.x,
+				dz = player.z - this.z,
+				d = dx*dx + dz*dz
+			if (d < .7) {
+				pickDirSprite(this, 16, 2, player.x, player.z)
+				eat(player)
+			} else {
+				this.sprite = 16
+			}
+		},
+	})
+}
+
+function addSnakeCircle(x, z, r, s, t) {
+	for (let a = Math.PI * 2, odd = 0; a > 0; a -= s, odd ^= 1) {
+		addSnake(
+			x + Math.cos(a) * (r + odd * t),
+			z + Math.sin(a) * (r + odd * t)
+		)
+	}
+}
+
+function addRandomPredator(x, z, r) {
+	const a = random() * Math.PI * 2
+	const o = {
+		sprite: 4,
+		x: x + Math.cos(a) * r,
+		y: 0,
+		z: z + Math.sin(a) * r,
+		lx: 0, lz: 0, stuck: 0, ignore: 0,
+		last: 0, frame: 0, speed: .06, sight: 16,
+		update: updatePredator,
+		waypoint: function() {
+			const a = random() * Math.PI * 2
+			const r = 1 + random() * 8
+			this.tx = x + Math.cos(a) * r
+			this.tz = z + Math.sin(a) * r
+		}
+	}
+	o.waypoint()
+	objects.push(o)
+}
+
+function addWanderingPredator(x, z, r, a) {
+	const rx = Math.cos(a) * r,
+		rz = Math.sin(a) * r,
+		x1 = x + rx,
+		z1 = z + rz,
+		x2 = x - rx,
+		z2 = z - rz
+	const o = {
+		sprite: 4,
+		x: x1,
+		y: 0,
+		z: z1,
+		lx: 0, lz: 0, stuck: 0, ignore: 0,
+		last: 0, frame: 0, speed: .06, sight: 16,
+		update: updatePredator,
+		waypoint: function() {
+			if (this.x == x1 && this.z == z1) {
+				this.tx = x2
+				this.tz = z2
+			} else {
+				this.tx = x1
+				this.tz = z1
 			}
 		}
 	}
+	o.waypoint()
+	objects.push(o)
+}
+
+function addCirclingPredator(x, z, r, s, a) {
+	const o = {
+		sprite: 4,
+		x: x + r,
+		y: 0,
+		z: z,
+		lx: 0, lz: 0, stuck: 0, ignore: 0,
+		last: 0, frame: 0, speed: .06, sight: 16, a: a || 0,
+		update: updatePredator,
+		waypoint: function() {
+			this.tx = x + Math.cos(this.a) * r
+			this.tz = z + Math.sin(this.a) * r
+			this.a += s
+		}
+	}
+	o.waypoint()
+	objects.push(o)
 }
 
 function drawCircle(cx, cz, radius) {
@@ -572,20 +658,29 @@ function drawCircle(cx, cz, radius) {
 }
 
 function createMap() {
-	const innerRadius = mapRadius - groundRadius,
-		water = 19
+	const water = 19
 	map.fill(water | 128)
 
 	for (let i = 0, r = 5, x = 0, z = 0, n, a = 0;
 			i < 12; ++i) {
-		drawBlob(mapRadius + x, mapRadius + z, r,
-			random() * 100, 2,
-			random() * 100, 3)
-		//drawCircle(mapRadius + x, mapRadius + z, r)
-		objects.push({sprite: 9 + random() * 2 | 0,
-			x: x * 2,
-			y: 0,
-			z: z * 2})
+		drawCircle(mapRadius + x, mapRadius + z, r)
+		const xx = x*2, zz = z*2, rr = r*2
+		switch (random() * 3 | 0) {
+		default:
+		case 0:
+			addCirclingPredator(xx, zz, rr * .8, .63)
+			break
+		case 1:
+			addSnakeCircle(xx, zz, rr * .8, rr * .05, 1)
+			break
+		case 2:
+			addWanderingPredator(xx, zz, rr * .8, random() * Math.PI)
+			break
+		case 3:
+			addRandomPredator(xx, zz, rr * .8)
+			addRandomPredator(xx, zz, rr * .8)
+			break
+		}
 		n = 4 + random() * 4 | 0
 		if (i == 9) {
 			a += 3.14
@@ -656,6 +751,22 @@ function createMap() {
 			if (t) {
 				map[o] = t | 128
 			}
+		}
+	}
+
+	// Add some fauna.
+	for (let i = 300; i > 0;) {
+		const x = random() * (mapSize - 1),
+			z = random() * (mapSize - 1)
+		if (x*x + z*z > 2 &&
+				!(map[Math.round(z) * mapSize + Math.round(x)] & 128)) {
+			objects.push({
+				sprite: 9 + random() * 2 | 0,
+				x: (x - mapRadius) * 2,
+				y: 0,
+				z: (z - mapRadius) * 2
+			})
+			--i
 		}
 	}
 /*
