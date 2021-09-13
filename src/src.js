@@ -562,13 +562,13 @@ function addFlowers(n, x, z, r) {
 		const a = random() * Math.PI * 2,
 			rr = random() * r,
 			o = {
-			sprite: 15,
-			x: x + Math.cos(a) * rr,
-			y: 0,
-			z: z + Math.sin(a) * rr,
-			tasty: 1,
-			name: 'Flower',
-			use: dropItem,
+				sprite: 15,
+				x: x + Math.cos(a) * rr,
+				y: 0,
+				z: z + Math.sin(a) * rr,
+				tasty: 1,
+				name: 'Flower',
+				use: dropItem,
 		}
 		objects.push(o)
 		pickables.push(o)
@@ -585,21 +585,21 @@ function addSnakeCircle(x, z, r, s, t) {
 }
 
 function addRandomPredator(x, z, r) {
-	const a = random() * Math.PI * 2
-	const o = {
-		sprite: 4,
-		x: x + Math.cos(a) * r,
-		y: 0,
-		z: z + Math.sin(a) * r,
-		lx: 0, lz: 0, stuck: 0, ignore: 0,
-		last: 0, frame: 0, speed: .06, sight: 16,
-		update: updatePredator,
-		waypoint: function() {
-			const a = random() * Math.PI * 2
-			const r = 1 + random() * 8
-			this.tx = x + Math.cos(a) * r
-			this.tz = z + Math.sin(a) * r
-		}
+	const a = random() * Math.PI * 2,
+		o = {
+			sprite: 4,
+			x: x + Math.cos(a) * r,
+			y: 0,
+			z: z + Math.sin(a) * r,
+			lx: 0, lz: 0, stuck: 0, ignore: 0,
+			last: 0, frame: 0, speed: .06, sight: 16,
+			update: updatePredator,
+			waypoint: function() {
+				const a = random() * Math.PI * 2
+				const r = 1 + random() * 8
+				this.tx = x + Math.cos(a) * r
+				this.tz = z + Math.sin(a) * r
+			}
 	}
 	o.waypoint()
 	objects.push(o)
@@ -611,24 +611,24 @@ function addWanderingPredator(x, z, r, a) {
 		x1 = x + rx,
 		z1 = z + rz,
 		x2 = x - rx,
-		z2 = z - rz
-	const o = {
-		sprite: 4,
-		x: x1,
-		y: 0,
-		z: z1,
-		lx: 0, lz: 0, stuck: 0, ignore: 0,
-		last: 0, frame: 0, speed: .06, sight: 16,
-		update: updatePredator,
-		waypoint: function() {
-			if (this.x == x1 && this.z == z1) {
-				this.tx = x2
-				this.tz = z2
-			} else {
-				this.tx = x1
-				this.tz = z1
+		z2 = z - rz,
+		o = {
+			sprite: 4,
+			x: x1,
+			y: 0,
+			z: z1,
+			lx: 0, lz: 0, stuck: 0, ignore: 0,
+			last: 0, frame: 0, speed: .06, sight: 16,
+			update: updatePredator,
+			waypoint: function() {
+				if (this.x == x1 && this.z == z1) {
+					this.tx = x2
+					this.tz = z2
+				} else {
+					this.tx = x1
+					this.tz = z1
+				}
 			}
-		}
 	}
 	o.waypoint()
 	objects.push(o)
@@ -683,7 +683,7 @@ pickables.push(o)*/
 		drawIsland(mapRadius + x, mapRadius + z, r)
 		const xx = x*2, zz = z*2, rr = r*2
 		if (i < 12) {
-			switch (random() * 4 | 0) {
+			switch (i % 4) {
 			default:
 			case 0:
 				addCirclingPredator(xx, zz, rr * .8, .63)
@@ -695,6 +695,9 @@ pickables.push(o)*/
 			case 2:
 				addWanderingPredator(xx, zz, rr * .8, a + 1.57)
 				break
+			case 1:
+				addSnakeCircle(xx, zz, rr * .5, rr * .05, 2)
+				addFlowers(1 + random() * 3, xx, zz, rr * .8)
 			case 3:
 				addRandomPredator(xx, zz, rr * .8)
 				addRandomPredator(xx, zz, rr * .8)
