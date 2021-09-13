@@ -536,6 +536,37 @@ function createTexture(image) {
 	return id
 }
 
+function addFly(x, z, r) {
+	const a = random() * Math.PI * 2,
+		o = {
+			sprite: 20,
+			x: x + Math.cos(a) * r,
+			y: 0,
+			z: z + Math.sin(a) * r,
+			last: 0, frame: 0,
+			update: function() {
+				pickDirSprite(this, 19, 2, this.tx, this.tz)
+				if (moveToTarget(this, this.tx, this.tz, .08)) {
+					this.waypoint()
+				}
+			},
+			waypoint: function() {
+				const a = random() * Math.PI * 2
+				const r = 1 + random() * 8
+				this.tx = x + Math.cos(a) * r
+				this.tz = z + Math.sin(a) * r
+			}
+	}
+	o.waypoint()
+	objects.push(o)
+}
+
+function addFlies(n, x, z, r) {
+	for (let i = 0; i < n; ++i) {
+		addFly(x, z, r)
+	}
+}
+
 function addSnake(x, z) {
 	objects.push({
 		sprite: 16,
@@ -683,21 +714,23 @@ pickables.push(o)*/
 		drawIsland(mapRadius + x, mapRadius + z, r)
 		const xx = x*2, zz = z*2, rr = r*2
 		if (i < 12) {
-			switch (i % 4) {
+			switch (random() * 4 | 0) {
 			default:
 			case 0:
 				addCirclingPredator(xx, zz, rr * .8, .63)
 				break
 			case 1:
 				addSnakeCircle(xx, zz, rr * .8, rr * .05, 1)
-				addFlowers(1 + random() * 4, xx, zz, rr * .8)
+				addFlowers(1 + random() * 4 | 0, xx, zz, rr * .8)
+				addFlies(1 + random() * 3 | 0, xx, zz, rr * .7)
 				break
 			case 2:
 				addWanderingPredator(xx, zz, rr * .8, a + 1.57)
 				break
 			case 1:
 				addSnakeCircle(xx, zz, rr * .5, rr * .05, 2)
-				addFlowers(1 + random() * 3, xx, zz, rr * .8)
+				addFlowers(1 + random() * 3 | 0, xx, zz, rr * .8)
+				addFlies(1 + random() * 3 | 0, xx, zz, rr * .7)
 			case 3:
 				addRandomPredator(xx, zz, rr * .8)
 				addRandomPredator(xx, zz, rr * .8)
