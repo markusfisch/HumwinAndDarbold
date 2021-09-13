@@ -39,12 +39,15 @@ const horizon = 1000,
 				}
 				items.length = 0
 				updateInventory()
-				say('Ouch!')
+				say("Ouch!")
 			},
 			resurrect: function() {
 				this.update = null
 				setTimeout(function() {
-					say('You got printed anew.')
+					say([
+						"Got printed anew!",
+						"It's good to be robot!"
+					])
 					egg.reset()
 					player.x = player.z = player.tx = player.tz =
 						player.killed = pointers = 0
@@ -58,7 +61,7 @@ const horizon = 1000,
 	darbold = objects[1]
 
 let seed = 1,
-	message,
+	bubble,
 	inventory,
 	gl,
 	spriteModelBuffer,
@@ -84,13 +87,33 @@ let seed = 1,
 	now,
 	won
 
-function say(what) {
-	clearTimeout(message.tid)
-	message.style.display = 'inline-block'
-	message.innerHTML = what
-	message.tid = setTimeout(function() {
-		message.style.display = 'none'
-	}, 1000 + 200 * what.split(' ').length)
+function say(lines) {
+	clearTimeout(bubble.tid)
+	if (!Array.isArray(lines)) {
+		lines = [lines]
+	}
+	const line = lines.shift()
+	bubble.style.display = 'inline-block'
+	bubble.innerHTML = line
+	bubble.last = now
+	bubble.next = function() {
+		if (now - bubble.last < 300) {
+			return
+		}
+		bubble.last = now
+		clearTimeout(bubble.tid)
+		if (lines.length) {
+			say(lines)
+		} else {
+			bubble.style.display = 'none'
+			bubble.next = null
+		}
+	}
+	bubble.tid = setTimeout(
+		bubble.next,
+		// Wait a second and 200ms per word.
+		1000 + 200 * line.split(' ').length
+	)
 }
 
 function moveToTarget(o, tx, tz, step) {
@@ -220,7 +243,7 @@ function eat(o, prey) {
 			player.tx = darbold.x - 1
 			player.tz = darbold.z
 			won = 1
-			say('Burp!')
+			say("Burp!")
 		}
 	}
 }
@@ -425,6 +448,7 @@ function pointerCancel(event) {
 
 function pointerUp(event) {
 	setPointer(event, 0)
+	bubble.next && bubble.next()
 }
 
 function pointerMove(event) {
@@ -879,7 +903,7 @@ function init(atlas) {
 		o.dir = 1
 	})
 
-	message = document.getElementById('M')
+	bubble = document.getElementById('M')
 	inventory = document.getElementById('I')
 
 	const canvas = document.getElementById('C')
@@ -957,6 +981,14 @@ function init(atlas) {
 	}, 0)
 
 	run()
+	say([
+		"Hello! I am Humwin,",
+		"your friendly space exploring robot.",
+		"I'm looking for my friend Darbold,",
+		"a sampling robot, that looks like me.",
+		"I was supposed to pick him up here,",
+		"but somehow I can't find him.",
+	])
 }
 
 function svgToImg(svg, sw, sh, dw, dh) {
