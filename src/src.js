@@ -30,6 +30,7 @@ const horizon = 100,
 	objects = [
 		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
 			last: 0, frame: 0, update: updatePlayer,
+			tries: 0,
 			getEaten: function() {
 				this.update = function() {
 					this.sprite = 3
@@ -37,7 +38,20 @@ const horizon = 100,
 				}
 				items.length = 0
 				updateInventory()
-				say("Ouch!")
+				const m = ["Ouch!"],
+					tips = [
+						"Damn, these things are hungry!",
+						"Not nice.",
+						"I wonder if Darbold was eaten, too.",
+						"He certainly wasn't in there!",
+						"No, not here either.",
+						"Maybe it's not running around anymore.",
+						"If I only knew what makes them vomit.",
+						"What a bad breath!",
+						"My bytes got bitten!",
+				]
+				m.push(tips[this.tries++ % tips.length])
+				say(m)
 			},
 			resurrect: function() {
 				this.update = null
@@ -85,7 +99,7 @@ let seed = 1,
 	now,
 	won
 
-function say(lines) {
+function say(lines, f) {
 	clearTimeout(bubble.tid)
 	if (!Array.isArray(lines)) {
 		lines = [lines]
@@ -101,10 +115,11 @@ function say(lines) {
 		bubble.last = now
 		clearTimeout(bubble.tid)
 		if (lines.length) {
-			say(lines)
+			say(lines, f)
 		} else {
 			bubble.style.display = 'none'
 			bubble.next = null
+			f && f()
 		}
 	}
 	bubble.tid = setTimeout(
@@ -207,7 +222,14 @@ function updatePlayer() {
 			items.push(o)
 			updateInventory()
 			pickables = pickables.filter(p => o != p)
-			say(`Picked up a ${o.name}`)
+			const m = [
+				`Picked up a ${o.name}`
+			]
+			if (o.name == 'Egg') {
+				m.push("Hm, maybe that makes one")
+				m.push("of them vomit…")
+			}
+			say(m)
 			break
 		}
 	}
@@ -245,10 +267,14 @@ function eat(o, prey) {
 				"Burp!",
 				"Darbold! There you are!",
 				"Finally I found you!",
-				"Now, let's get off this planet,",
+				"Now, let's get off this planet",
 				"and watch some Spaceflix!",
 				"It's a long flight home…",
-			])
+			], function() {
+				player.update = darbold.update = function() {
+					this.y += .2
+				}
+			})
 		}
 	}
 }
