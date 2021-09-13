@@ -45,14 +45,17 @@ const horizon = 1000,
 				this.update = null
 				setTimeout(function() {
 					say('You got printed anew.')
+					egg.reset()
 					player.x = player.z = player.tx = player.tz =
 						player.killed = pointers = 0
 					player.update = updatePlayer
 				}, 2000)
 			}
 		},
+		{sprite: 22, x: 100000, y: 0, z:0},
 	],
-	player = objects[0]
+	player = objects[0],
+	darbold = objects[1]
 
 let seed = 1,
 	message,
@@ -77,7 +80,9 @@ let seed = 1,
 	pointers,
 	pickables = [],
 	items = [],
-	now
+	egg,
+	now,
+	won
 
 function say(what) {
 	clearTimeout(message.tid)
@@ -164,7 +169,7 @@ function updateInventory() {
 }
 
 function updatePlayer() {
-	if (pointers > 0) {
+	if (!won && pointers > 0) {
 		moveToPointer()
 		this.dropAngle = 0
 	}
@@ -196,7 +201,7 @@ function updatePlayer() {
 	}
 }
 
-function eat(prey) {
+function eat(o, prey) {
 	if (!prey.eaten) {
 		prey.eaten = 1
 		prey.killed = now
@@ -206,6 +211,17 @@ function eat(prey) {
 		prey.x = 100000
 		prey.eaten = 0
 		prey.resurrect && prey.resurrect()
+		if (o.hasDarbold && prey.name == 'Egg') {
+			o.vomit = now + 1000
+			o.hasDarbold = 0
+			darbold.x = o.x + .5
+			darbold.z = o.z
+			objects.forEach(o => o.sight = 0)
+			player.tx = darbold.x - 1
+			player.tz = darbold.z
+			won = 1
+			say('Burp!')
+		}
 	}
 }
 
@@ -213,7 +229,7 @@ function hunt(o, prey, d) {
 	if (d < .2) {
 		// Eat it!
 		pickSprite(o, 7, 2)
-		eat(prey)
+		eat(o, prey)
 		return
 	} else if (d < o.sight && o.ignore < 1) {
 		// Move towards prey.
@@ -240,6 +256,10 @@ function hunt(o, prey, d) {
 }
 
 function updatePredator() {
+	if (this.vomit > now) {
+		pickSprite(this, 7, 2)
+		return
+	}
 	let prey, closest = 100000, sight = this.sight
 	for (let i = 0, l = pickables.length; i < l; ++i) {
 		const o = pickables[i]
@@ -255,12 +275,19 @@ function updatePredator() {
 			break
 		}
 	}
-	const dx = player.x - this.x,
-		dz = player.z - this.z,
-		d = dx*dx + dz*dz
-	if (d < sight && d < closest) {
-		prey = player
-		closest = d
+	if (this.hasDarbold) {
+		if (!prey || prey.name != 'Egg') {
+			this.sprite = 4
+			return
+		}
+	} else {
+		const dx = player.x - this.x,
+			dz = player.z - this.z,
+			d = dx*dx + dz*dz
+		if (d < sight && d < closest) {
+			prey = player
+			closest = d
+		}
 	}
 	hunt(this, prey, closest)
 }
@@ -580,7 +607,7 @@ function addSnake(x, z) {
 				d = dx*dx + dz*dz
 			if (d < .7) {
 				pickDirSprite(this, 16, 2, player.x, player.z)
-				eat(player)
+				eat(this, player)
 			} else {
 				this.sprite = 16
 			}
@@ -668,9 +695,7 @@ function addWanderingPredator(x, z, r, a) {
 function addCirclingPredator(x, z, r, s, a) {
 	const o = {
 		sprite: 4,
-		x: x + r,
 		y: 0,
-		z: z,
 		lx: 0, lz: 0, stuck: 0, ignore: 0,
 		last: 0, frame: 0, speed: .06, sight: 16, a: a || 0,
 		update: updatePredator,
@@ -681,6 +706,8 @@ function addCirclingPredator(x, z, r, s, a) {
 		}
 	}
 	o.waypoint()
+	o.x = o.tx
+	o.z = o.tz
 	objects.push(o)
 }
 
@@ -696,28 +723,22 @@ function drawIsland(cx, cz, radius) {
 }
 
 function createMap() {
-	const water = 19
+	const water = 19, challenges = 9
 	map.fill(water | 128)
 
-//DEBUG!
-/*const o = {
-	sprite: 14,
-	x: 4, y: 0, z: 0,
-	name: 'Egg',
-	use: dropItem,
-}
-objects.push(o)
-pickables.push(o)*/
-
 	for (let i = 0, r = 5, x = 0, z = 0, n, a = 0;
-			i < 12; ++i) {
+			i < challenges; ++i) {
 		drawIsland(mapRadius + x, mapRadius + z, r)
 		const xx = x*2, zz = z*2, rr = r*2
-		if (i < 12) {
-			switch (random() * 4 | 0) {
+		if (i < challenges - 1) {
+			switch (i % 6) {
 			default:
 			case 0:
 				addCirclingPredator(xx, zz, rr * .8, .63)
+				addRandomPredator(xx, zz, rr * .8)
+				if (i == 0) {
+					objects[objects.length - 1].hasDarbold = 1
+				}
 				break
 			case 1:
 				addSnakeCircle(xx, zz, rr * .8, rr * .05, 1)
@@ -727,24 +748,34 @@ pickables.push(o)*/
 			case 2:
 				addWanderingPredator(xx, zz, rr * .8, a + 1.57)
 				break
-			case 1:
+			case 3:
 				addSnakeCircle(xx, zz, rr * .5, rr * .05, 2)
 				addFlowers(1 + random() * 3 | 0, xx, zz, rr * .8)
 				addFlies(1 + random() * 3 | 0, xx, zz, rr * .7)
-			case 3:
+			case 4:
 				addRandomPredator(xx, zz, rr * .8)
 				addRandomPredator(xx, zz, rr * .8)
 				break
+			case 5:
+				addSnakeCircle(xx, zz, rr * .8, rr * .05, 1)
+				addFlowers(1 + random() * 4 | 0, xx, zz, rr * .4)
 			}
 		} else {
-			const o = {
+			addCirclingPredator(xx, zz, rr * .8, .63)
+			addCirclingPredator(xx, zz, rr * .7, -.63, 3)
+			egg = {
 				sprite: 14,
 				x: xx, y: 0, z: zz,
 				name: 'Egg',
 				use: dropItem,
+				reset: function() {
+					this.x = xx
+					this.z = zz
+					this.tasty = 0
+				}
 			}
-			objects.push(o)
-			pickables.push(o)
+			objects.push(egg)
+			pickables.push(egg)
 		}
 		n = 4 + random() * 3 | 0
 		if (i == 9) {
@@ -820,7 +851,7 @@ pickables.push(o)*/
 	}
 
 	// Add some fauna.
-	for (let i = 300; i > 0;) {
+	for (let i = challenges * 30; i > 0;) {
 		const x = random() * (mapSize - 1),
 			z = random() * (mapSize - 1)
 		if (x*x + z*z > 2 &&
