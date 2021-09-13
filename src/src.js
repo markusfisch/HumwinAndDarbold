@@ -140,6 +140,7 @@ function dropItem() {
 	const a = player.dropAngle
 	this.x = player.x + Math.cos(a) / 2
 	this.z = player.z + Math.sin(a) / 2
+	this.tasty = 1
 	player.dropAngle = a + 1
 	pickables.push(this)
 	items = items.filter(item => item != this)
@@ -180,7 +181,7 @@ function updatePlayer() {
 			items.push(o)
 			updateInventory()
 			pickables = pickables.filter(p => o != p)
-			say(`Picked up a ${o.name}. It's beautiful!`)
+			say(`Picked up a ${o.name}`)
 			break
 		}
 	}
@@ -241,8 +242,11 @@ function hunt(o, prey, d) {
 function updatePredator() {
 	let prey, closest = 100000, sight = this.sight
 	for (let i = 0, l = pickables.length; i < l; ++i) {
-		const o = pickables[i],
-			dx = o.x - this.x,
+		const o = pickables[i]
+		if (!o.tasty) {
+			continue
+		}
+		const dx = o.x - this.x,
 			dz = o.z - this.z,
 			d = dx*dx + dz*dz
 		if (d < sight) {
@@ -562,6 +566,7 @@ function addFlowers(n, x, z, r) {
 			x: x + Math.cos(a) * rr,
 			y: 0,
 			z: z + Math.sin(a) * rr,
+			tasty: 1,
 			name: 'Flower',
 			use: dropItem,
 		}
@@ -663,6 +668,16 @@ function createMap() {
 	const water = 19
 	map.fill(water | 128)
 
+//DEBUG!
+/*const o = {
+	sprite: 14,
+	x: 4, y: 0, z: 0,
+	name: 'Egg',
+	use: dropItem,
+}
+objects.push(o)
+pickables.push(o)*/
+
 	for (let i = 0, r = 5, x = 0, z = 0, n, a = 0;
 			i < 12; ++i) {
 		drawIsland(mapRadius + x, mapRadius + z, r)
@@ -678,7 +693,7 @@ function createMap() {
 				addFlowers(1 + random() * 4, xx, zz, rr * .8)
 				break
 			case 2:
-				addWanderingPredator(xx, zz, rr * .8, random() * Math.PI)
+				addWanderingPredator(xx, zz, rr * .8, a + 1.57)
 				break
 			case 3:
 				addRandomPredator(xx, zz, rr * .8)
@@ -695,7 +710,7 @@ function createMap() {
 			objects.push(o)
 			pickables.push(o)
 		}
-		n = 4 + random() * 4 | 0
+		n = 4 + random() * 3 | 0
 		if (i == 9) {
 			a += 3.14
 		}
