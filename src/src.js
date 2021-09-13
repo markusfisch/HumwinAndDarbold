@@ -1,8 +1,6 @@
 'use strict'
 
-const horizon = 1000,
-	//camPos = [0, 12 * 7, 9 * 7],
-	//camPos = [0, 12 * 4, 9 * 4],
+const horizon = 100,
 	camPos = [0, 12, 9],
 	idMat = new Float32Array([
 		1, 0, 0, 0,
@@ -243,7 +241,14 @@ function eat(o, prey) {
 			player.tx = darbold.x - 1
 			player.tz = darbold.z
 			won = 1
-			say("Burp!")
+			say([
+				"Burp!",
+				"Darbold! There you are!",
+				"Finally I found you!",
+				"Now, let's get off this planet,",
+				"and watch some Spaceflix!",
+				"It's a long flight home…",
+			])
 		}
 	}
 }
