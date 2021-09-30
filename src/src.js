@@ -550,26 +550,26 @@ function updateGroundUvs(x, z) {
 				top = atlasCoords[offset + 1],
 				right = atlasCoords[offset + 6],
 				bottom = atlasCoords[offset + 7]
-			// A--B
+			// A--C
 			// | /
 			// |/
-			// C
+			// B
 			groundUvs[i++] = left
-			groundUvs[i++] = top
-			groundUvs[i++] = right
 			groundUvs[i++] = top
 			groundUvs[i++] = left
 			groundUvs[i++] = bottom
-			//    E
+			groundUvs[i++] = right
+			groundUvs[i++] = top
+			//    F
 			//   /|
 			//  / |
-			// D--F
+			// D--E
 			groundUvs[i++] = left
 			groundUvs[i++] = bottom
 			groundUvs[i++] = right
-			groundUvs[i++] = top
-			groundUvs[i++] = right
 			groundUvs[i++] = bottom
+			groundUvs[i++] = right
+			groundUvs[i++] = top
 		}
 	}
 }
@@ -580,20 +580,20 @@ function createGroundModel() {
 		for (let x = -groundRadius; x <= groundRadius; ++x) {
 			const xx = x * 2, yy = y * 2
 			vertices.push(
-				// A--B
+				// A--C
 				// | /
 				// |/
-				// C
+				// B
 				xx - 1, 0, yy - 1,
-				xx + 1, 0, yy - 1,
 				xx - 1, 0, yy + 1,
-				//    E
+				xx + 1, 0, yy - 1,
+				//    F
 				//   /|
 				//  / |
-				// D--F
+				// D--E
 				xx - 1, 0, yy + 1,
-				xx + 1, 0, yy - 1,
 				xx + 1, 0, yy + 1,
+				xx + 1, 0, yy - 1,
 			)
 		}
 	}
