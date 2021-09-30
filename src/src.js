@@ -26,7 +26,6 @@ const horizon = 100,
 	pointersX = [],
 	pointersY = [],
 	compareDist = (a, b) => b.dist - a.dist,
-	camera = {x: 0, z: 0},
 	objects = [
 		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
 			last: 0, frame: 0, update: updatePlayer,
@@ -135,21 +134,20 @@ function moveToTarget(o, tx, tz, step) {
 		d = Math.sqrt(dx*dx + dz*dz),
 		f = Math.min(1, step / d),
 		x = o.x + dx * f,
-		z = o.z + dz * f
-	if (o != camera) {
-		const mx = mapRadius + x / 2,
-			mz = mapRadius + z / 2,
-			rx = Math.round(mx),
-			rz = Math.round(mz),
-			t = map[rz * mapSize + rx],
-			fx = ((mx - rx) + .5) * 3 | 0,
-			fz = ((mz - rz) + .5) * 3 | 0
-		let m
-		if (t & 128 && (!(m = dns[t & 127]) || !m[fz * 3 + fx])) {
-			o.tx = o.x
-			o.tz = o.z
-			return 1
-		}
+		z = o.z + dz * f,
+		mx = mapRadius + x / 2,
+		mz = mapRadius + z / 2,
+		rx = Math.round(mx),
+		rz = Math.round(mz),
+		t = map[rz * mapSize + rx],
+		fx = ((mx - rx) + .5) * 3 | 0,
+		fz = ((mz - rz) + .5) * 3 | 0
+	// Check if we can stand of that part of the ground tile.
+	let m
+	if (t & 128 && (!(m = dns[t & 127]) || !m[fz * 3 + fx])) {
+		o.tx = o.x
+		o.tz = o.z
+		return 1
 	}
 	o.x = x
 	o.z = z
@@ -233,14 +231,14 @@ function updatePlayer() {
 			break
 		}
 	}
-	// Make camera follow player with a slight delay.
+	// Make the camera follow Humwin with a slight delay.
 	const dx = lookX - this.x,
 		dz = lookZ - this.z,
 		d = dx*dx + dz*dz
-	if (d > 0) {
-		const dd = Math.sqrt(d) - 2
-		moveToTarget(camera, this.tx, this.tz, dd > .01 ? dd : .06)
-		lookAt(camera.x, camera.z)
+	if (d > .01) {
+		lookX = lookX * .9 + this.x * .1
+		lookZ = lookZ * .9 + this.z * .1
+		lookAt(lookX, lookZ)
 	}
 }
 
