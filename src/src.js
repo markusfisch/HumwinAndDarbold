@@ -60,15 +60,15 @@ const horizon = 100,
 						"It's good to be robot!"
 					])
 					egg.reset()
-					player.x = player.z = player.tx = player.tz =
-						player.killed = pointers = 0
-					player.update = updatePlayer
+					humwin.x = humwin.z = humwin.tx = humwin.tz =
+						humwin.killed = pointers = 0
+					humwin.update = updatePlayer
 				}, 2000)
 			}
 		},
 		{sprite: 22, x: 100000, y: 0, z:0},
 	],
-	player = objects[0],
+	humwin = objects[0],
 	darbold = objects[1]
 
 let seed = 1,
@@ -160,7 +160,7 @@ function pickSprite(o, idle, frames) {
 
 function pickDirSprite(o, idle, frames, tx, tz) {
 	// To check whether (tx, tz) is left or right (on the screen)
-	// from the camera/player vector (x - camX, z - camZ), we can
+	// from the camera/humwin vector (x - camX, z - camZ), we can
 	// use the perpendicular vector (z - camZ, camX - x) which is
 	// always pointing in the same relative direction. Calculating
 	// the dot product with the vector (tx - x, tz - z) tells us
@@ -176,11 +176,11 @@ function pickDirSprite(o, idle, frames, tx, tz) {
 }
 
 function dropItem() {
-	const a = player.dropAngle
-	this.x = player.x + Math.cos(a) / 2
-	this.z = player.z + Math.sin(a) / 2
+	const a = humwin.dropAngle
+	this.x = humwin.x + Math.cos(a) / 2
+	this.z = humwin.z + Math.sin(a) / 2
 	this.tasty = 1
-	player.dropAngle = a + 1
+	humwin.dropAngle = a + 1
 	pickables.push(this)
 	items = items.filter(item => item != this)
 	updateInventory()
@@ -258,8 +258,8 @@ function eat(o, prey) {
 			darbold.x = o.x + .5
 			darbold.z = o.z
 			objects.forEach(o => o.sight = 0)
-			player.tx = darbold.x - 1
-			player.tz = darbold.z
+			humwin.tx = darbold.x - 1
+			humwin.tz = darbold.z
 			won = 1
 			say([
 				"Burp!",
@@ -269,7 +269,7 @@ function eat(o, prey) {
 				"and watch some Spaceflix!",
 				"It's a long flight home…",
 			], function() {
-				player.update = darbold.update = function() {
+				humwin.update = darbold.update = function() {
 					this.y += .2
 				}
 			})
@@ -333,11 +333,11 @@ function updatePredator() {
 			return
 		}
 	} else {
-		const dx = player.x - this.x,
-			dz = player.z - this.z,
+		const dx = humwin.x - this.x,
+			dz = humwin.z - this.z,
 			d = dx*dx + dz*dz
 		if (d < sight && d < closest) {
-			prey = player
+			prey = humwin
 			closest = d
 		}
 	}
@@ -438,10 +438,10 @@ function getGroundSpot(out, nx, ny) {
 }
 
 function moveToPointer() {
-	if (!player.killed &&
+	if (!humwin.killed &&
 			getGroundSpot(pointerSpot, pointersX[0], pointersY[0])) {
-		player.tx = pointerSpot[0]
-		player.tz = pointerSpot[2]
+		humwin.tx = pointerSpot[0]
+		humwin.tz = pointerSpot[2]
 	}
 }
 
@@ -655,12 +655,12 @@ function addSnake(x, z) {
 		z: z,
 		last: 0, frame: 0,
 		update: function() {
-			const dx = player.x - this.x,
-				dz = player.z - this.z,
+			const dx = humwin.x - this.x,
+				dz = humwin.z - this.z,
 				d = dx*dx + dz*dz
 			if (d < .7) {
-				pickDirSprite(this, 16, 2, player.x, player.z)
-				eat(this, player)
+				pickDirSprite(this, 16, 2, humwin.x, humwin.z)
+				eat(this, humwin)
 			} else {
 				this.sprite = 16
 			}
