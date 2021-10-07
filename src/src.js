@@ -68,6 +68,7 @@ const horizon = 100,
 		},
 		{sprite: 22, x: 100000, y: 0, z:0},
 	],
+	specks = [],
 	humwin = objects[0],
 	darbold = objects[1]
 
@@ -160,7 +161,7 @@ function pickSprite(o, idle, frames) {
 	o.sprite = idle + o.frame % frames
 }
 
-function pickDirSprite(o, idle, frames, tx, tz) {
+function pickDirSprite(o, idle, frames, tx, tz, drawSpecks) {
 	// To check whether (tx, tz) is left or right (on the screen)
 	// from the camera/humwin vector (x - camX, z - camZ), we can
 	// use the perpendicular vector (z - camZ, camX - x) which is
@@ -175,6 +176,18 @@ function pickDirSprite(o, idle, frames, tx, tz) {
 	}
 	o.sprite = idle + 1 + o.frame % frames
 	o.dir = dir < 0 ? -1 : 1
+	if (drawSpecks) {
+		// Place specks.
+		for (let i = 100; i--;) {
+			const speck = specks[i]
+			if (speck.life < 1) {
+				speck.life = now + 200
+				speck.x = o.x + (Math.random() - .5) * .25
+				speck.z = o.z + (Math.random() - .5) * .25
+				break
+			}
+		}
+	}
 }
 
 function dropItem() {
@@ -209,7 +222,7 @@ function updatePlayer() {
 		moveToPointer()
 		this.dropAngle = 0
 	}
-	pickDirSprite(this, 0, 2, this.tx, this.tz)
+	pickDirSprite(this, 0, 2, this.tx, this.tz, 1)
 	moveToTarget(this, this.tx, this.tz, .09)
 	for (let i = 0, l = pickables.length; i < l; ++i) {
 		const o = pickables[i],
@@ -287,11 +300,11 @@ function hunt(o, prey, d) {
 		return
 	} else if (d < o.sight && o.ignore < 1) {
 		// Move towards prey.
-		pickDirSprite(o, 4, 2, prey.x, prey.z)
+		pickDirSprite(o, 4, 2, prey.x, prey.z, 1)
 		moveToTarget(o, prey.x, prey.z, o.speed)
 	} else {
 		// Nothing in sight. Walk along.
-		pickDirSprite(o, 4, 2, o.tx, o.tz)
+		pickDirSprite(o, 4, 2, o.tx, o.tz, 1)
 		if (moveToTarget(o, o.tx, o.tz, o.speed)) {
 			o.waypoint()
 		}
@@ -410,6 +423,15 @@ function run() {
 		gl.uniformMatrix4fv(modelViewMatLoc, 0, modelViewMat)
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 	})
+
+	// Clear specks.
+	for (let i = 100; i--;) {
+		const speck = specks[i], life = speck.life
+		if (life > 0 && life < now) {
+			speck.life = 0
+			speck.x = 100000
+		}
+	}
 }
 
 function rayGround(out, lx, ly, lz, dx, dy, dz) {
@@ -925,6 +947,13 @@ function createMap() {
 			})
 			--i
 		}
+	}
+
+	// Add some specks.
+	for (let i = 100; i--;) {
+		const speck = {sprite: 23, x: 100000, y: 0, z:0, life: 0}
+		objects.push(speck)
+		specks.push(speck)
 	}
 }
 
