@@ -27,7 +27,7 @@ const horizon = 100,
 	pointersY = [],
 	compareDist = (a, b) => b.dist - a.dist,
 	objects = [
-		{sprite: 0, x: 0, y: 0, z: 0, tx: 0, tz: 0,
+		{sprite: 0, x: 0, y: 10, z: 0, tx: 0, tz: 0,
 			last: 0, frame: 0, update: updatePlayer,
 			tries: 0,
 			getEaten: function() {
@@ -54,14 +54,15 @@ const horizon = 100,
 			},
 			resurrect: function() {
 				this.update = null
+				humwin.x = humwin.z = 0
+				humwin.y = 10
 				setTimeout(function() {
 					say([
 						"Got printed anew!",
 						"It's good to be robot!"
 					])
 					egg.reset()
-					humwin.x = humwin.z = humwin.tx = humwin.tz =
-						humwin.killed = pointers = 0
+					humwin.tx = humwin.tz = humwin.killed = pointers = 0
 					humwin.update = updatePlayer
 				}, 2000)
 			}
@@ -221,6 +222,9 @@ function updatePlayer() {
 	if (!won && pointers > 0) {
 		moveToPointer()
 		this.dropAngle = 0
+	}
+	if (this.y > 0) {
+		this.y = Math.max(0, this.y - warp * .25)
 	}
 	pickDirSprite(this, 0, 2, this.tx, this.tz, 1)
 	moveToTarget(this, this.tx, this.tz, .09)
