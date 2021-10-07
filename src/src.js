@@ -96,6 +96,8 @@ let seed = 1,
 	items = [],
 	egg,
 	now,
+	warp,
+	lastNow,
 	won
 
 function say(lines, f) {
@@ -132,7 +134,7 @@ function moveToTarget(o, tx, tz, step) {
 	const dx = tx - o.x,
 		dz = tz - o.z,
 		d = Math.sqrt(dx*dx + dz*dz),
-		f = Math.min(1, step / d),
+		f = Math.min(1, step * warp / d),
 		x = o.x + dx * f,
 		z = o.z + dz * f,
 		mx = mapRadius + x / 2,
@@ -346,7 +348,10 @@ function updatePredator() {
 
 function run() {
 	requestAnimationFrame(run)
+
 	now = Date.now()
+	warp = (now - lastNow) / 16
+	lastNow = now
 
 	// Draw ground.
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
@@ -1012,6 +1017,7 @@ function init(atlas) {
 		event.preventDefault()
 	}, 0)
 
+	lastNow = Date.now() - 16
 	run()
 	say([
 		"Hello! I am Humwin,",
