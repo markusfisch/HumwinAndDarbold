@@ -50,7 +50,7 @@ const horizon = 100,
 				say(m)
 			}
 		},
-		{sprite: 22, x: 100000, y: 0, z:0},
+		{sprite: 23, x: 100000, y: 0, z:0},
 	],
 	specks = [],
 	humwin = objects[0],
@@ -647,7 +647,7 @@ function addFly(x, z, r) {
 			z: z + Math.sin(a) * r,
 			last: 0, frame: 0,
 			update: function() {
-				pickDirSprite(this, 19, 2, this.tx, this.tz)
+				pickDirSprite(this, 20, 2, this.tx, this.tz)
 				if (moveToTarget(this, this.tx, this.tz, .08)) {
 					this.waypoint()
 				}
@@ -927,6 +927,15 @@ function createMap() {
 			}
 		}
 	}
+	// Use second water tile.
+	for (let y = 0; y < mapSize; ++y) {
+		for (let x = 0; x < mapSize; ++x) {
+			const t = tile(x, y)
+			if (t == (water | 128) && (x + y) & 1) {
+				map[ofs(x, y)] = 20 | 128
+			}
+		}
+	}
 
 	// Add some fauna.
 	for (let i = challenges * 30; i > 0;) {
@@ -946,7 +955,7 @@ function createMap() {
 
 	// Add some specks.
 	for (let i = 100; i--;) {
-		const speck = {sprite: 23, x: 100000, y: 0, z:0, life: 0}
+		const speck = {sprite: 24, x: 100000, y: 0, z:0, life: 0}
 		objects.push(speck)
 		specks.push(speck)
 	}
