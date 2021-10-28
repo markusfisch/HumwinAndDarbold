@@ -35,36 +35,19 @@ const horizon = 100,
 					this.sprite = 3
 					this.dir = this.frame % 2 ? -1 : 1
 				}
-				items.length = 0
-				updateInventory()
 				const m = ["Ouch!"],
 					tips = [
 						"Damn, these things are hungry!",
-						"Not nice.",
-						"I wonder if Darbold was eaten, too.",
+						"Not nice!",
+						"I wonder if Darbold was eaten.",
 						"He certainly wasn't in there!",
 						"No, not here either.",
-						"Maybe it's not running around anymore.",
 						"If I only knew what makes them vomit.",
 						"What a bad breath!",
 						"My bytes got bitten!",
 				]
 				m.push(tips[this.tries++ % tips.length])
 				say(m)
-			},
-			resurrect: function() {
-				this.update = null
-				humwin.x = humwin.z = 0
-				humwin.y = 10
-				setTimeout(function() {
-					say([
-						"Got printed anew!",
-						"It's good to be robot!"
-					])
-					egg.reset()
-					humwin.tx = humwin.tz = humwin.killed = pointers = 0
-					humwin.update = updatePlayer
-				}, 2000)
 			}
 		},
 		{sprite: 22, x: 100000, y: 0, z:0},
@@ -100,7 +83,8 @@ let seed = 1,
 	now,
 	warp,
 	lastNow,
-	won
+	won,
+	cease = 0
 
 function say(lines, f) {
 	clearTimeout(bubble.tid)
@@ -267,10 +251,17 @@ function eat(o, prey) {
 		prey.killed = now
 		prey.getEaten && prey.getEaten()
 	} else if (now - prey.killed > 1000) {
+		prey.eaten = 0
+		if (prey == humwin) {
+			cease = now + 1000
+			humwin.tx += random() * 2 - 1
+			humwin.tz += random() * 2 - 1
+			humwin.killed = pointers = 0
+			humwin.update = updatePlayer
+			return
+		}
 		pickables = pickables.filter(o => o != prey)
 		prey.x = 100000
-		prey.eaten = 0
-		prey.resurrect && prey.resurrect()
 		if (o.hasDarbold && prey.name == 'Egg') {
 			o.vomit = now + 1000
 			o.hasDarbold = 0
@@ -355,7 +346,7 @@ function updatePredator() {
 		const dx = humwin.x - this.x,
 			dz = humwin.z - this.z,
 			d = dx*dx + dz*dz
-		if (d < sight && d < closest) {
+		if (cease < now && d < sight && d < closest) {
 			prey = humwin
 			closest = d
 		}
@@ -689,7 +680,7 @@ function addSnake(x, z) {
 			const dx = humwin.x - this.x,
 				dz = humwin.z - this.z,
 				d = dx*dx + dz*dz
-			if (d < .7) {
+			if (cease < now && d < .7) {
 				pickDirSprite(this, 16, 2, humwin.x, humwin.z)
 				eat(this, humwin)
 			} else {
