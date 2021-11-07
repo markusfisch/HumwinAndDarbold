@@ -6,10 +6,14 @@ For [js13kGames][js13kgames] 2021.
 The theme was "Space".
 
 Humwin, your friendly space exploring robot, is in search for his pal
-Darbold. Darbold was exploring and collecting samples.
-Unfortunately, Humwin is a bit late and there is no sign of Darbold…
+Darbold, who has gone missing on a strange planet. What happened to him
+and where is he?
 
-Play it [here][play].
+Play the original submission [here][play].
+
+Unfortunately, the game turned out to be too unforgiving and I failed to
+make the solution clear. So here's a slightly improved [post-compo][post]
+version.
 
 Works on your phone, too.
 
@@ -21,4 +25,5 @@ Works on your phone, too.
 
 [js13kgames]: http://js13kgames.com/entries/2021
 [play]: http://hhsw.de/sites/proto/js13k2021/
+[post]: http://hhsw.de/sites/humwin
 [esbuild]: https://github.com/evanw/esbuild
