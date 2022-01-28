@@ -379,13 +379,18 @@ function run() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundUvBuffer)
 	gl.vertexAttribPointer(uvLoc, 2, gl.FLOAT, 0, 0, 0)
 
-	const mx = lookX >> 1, mz = lookZ >> 1
-	updateGroundUvs(mx, mz)
+	// Make the ground model show the current section of the map.
+	// Since a tile is 2 units in size, the current position must be
+	// halved to get map indices. And since the ground model can only
+	// represent whole tiles, only the pre-decimal place is needed.
+	const mapX = lookX >> 1, mapZ = lookZ >> 1
+	updateGroundUvs(mapX, mapZ)
 	gl.bufferData(gl.ARRAY_BUFFER, groundUvs, gl.DYNAMIC_DRAW)
 
+	// Center ground geometry around current position.
 	cacheMat.set(idMat)
-	cacheMat[12] = mx << 1
-	cacheMat[14] = mz << 1
+	cacheMat[12] = mapX << 1
+	cacheMat[14] = mapZ << 1
 	multiply(modelViewMat, viewMat, cacheMat)
 	gl.uniformMatrix4fv(modelViewMatLoc, 0, modelViewMat)
 	gl.drawArrays(gl.TRIANGLES, 0, groundLength)
