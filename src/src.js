@@ -361,6 +361,18 @@ function run() {
 	warp = (now - lastNow) / 16
 	lastNow = now
 
+	// Some update()'s may change the camera position so this needs
+	// to run in its own loop before anything is drawn.
+	objects.forEach(o => {
+		if (o.update) {
+			if (now - o.last > 200) {
+				++o.frame
+				o.last = now
+			}
+			o.update()
+		}
+	})
+
 	// Draw ground.
 	gl.bindBuffer(gl.ARRAY_BUFFER, groundModelBuffer)
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, 0, 0, 0)
@@ -383,17 +395,6 @@ function run() {
 	gl.vertexAttribPointer(vertexLoc, 3, gl.FLOAT, 0, 0, 0)
 	gl.bindBuffer(gl.ARRAY_BUFFER, spriteUvBuffer)
 
-	// Some update()'s may change camera position so this needs to run
-	// in its own loop before everything else.
-	objects.forEach(o => {
-		if (o.update) {
-			if (now - o.last > 200) {
-				++o.frame
-				o.last = now
-			}
-			o.update()
-		}
-	})
 	objects.forEach(o => {
 		// Less operations to calculate the distance from the view plane
 		// than it is to multiply the matrices.
