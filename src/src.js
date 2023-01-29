@@ -79,7 +79,6 @@ let seed = 1,
 	pointers,
 	pickables = [],
 	items = [],
-	egg,
 	now,
 	warp,
 	lastNow,
@@ -844,7 +843,7 @@ function createMap() {
 		} else {
 			addCirclingPredator(xx, zz, rr * .8, .63)
 			addCirclingPredator(xx, zz, rr * .7, -.63, 3)
-			egg = {
+			const egg = {
 				sprite: 14,
 				x: xx, y: 0, z: zz,
 				name: 'Egg',
